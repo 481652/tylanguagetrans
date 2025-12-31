@@ -203,7 +203,7 @@ Partial Class Form1
         Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
         Me.MaximizeBox = False
         Me.Name = "Form1"
-        Me.Text = "TY语加密器2.0"
+        Me.Text = "TY语加密器2.2"
         Me.grpMain.ResumeLayout(False)
         Me.grpMain.PerformLayout()
         Me.grpControls.ResumeLayout(False)

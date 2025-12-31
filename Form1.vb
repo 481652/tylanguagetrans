@@ -78,7 +78,7 @@ Public Class Form1
     End Sub
 
     Private Sub btnGenKeys_Click(sender As Object, e As EventArgs) Handles btnGenKeys.Click
-        Dim kp = GenerateRsaXmlPair(3072)
+        Dim kp = GenerateRsaXmlPair(2048)
         PublicKeyXml = kp.PublicXml
         PrivateKeyXml = kp.PrivateXml
         File.WriteAllText("public.xml", PublicKeyXml)
@@ -134,12 +134,13 @@ Public Class Form1
         End If
     End Function
 
+    ' 加密实现
     Private Function HybridEncrypt(plain As Byte(), rsaPublicXml As String) As Byte()
-        Const VERSION As Byte = 2
+        Const VERSION As Byte = 3
         Const ALG_ID As Byte = 1
 
-        ' 会话材料
-        Dim aesKey(31) As Byte, hmacKey(31) As Byte, iv(15) As Byte ' 16字节IV
+        ' 会话材料（精简后）
+        Dim aesKey(15) As Byte, hmacKey(15) As Byte, iv(15) As Byte ' 16字节IV
         Using rng = RandomNumberGenerator.Create()
             rng.GetBytes(aesKey)
             rng.GetBytes(hmacKey)
@@ -159,9 +160,9 @@ Public Class Form1
         End Using
 
         ' RSA加密会话密钥
-        Dim session(63) As Byte
-        Buffer.BlockCopy(aesKey, 0, session, 0, 32)
-        Buffer.BlockCopy(hmacKey, 0, session, 32, 32)
+        Dim session(31) As Byte
+        Buffer.BlockCopy(aesKey, 0, session, 0, 16)
+        Buffer.BlockCopy(hmacKey, 0, session, 16, 16)
         Dim rsaEnc As Byte()
         Using rsa As RSA = RSA.Create()
             rsa.FromXmlString(rsaPublicXml)
@@ -207,12 +208,12 @@ Public Class Form1
         End Using
     End Function
 
-
+    ' 解密实现
     Private Function HybridDecrypt(packet As Byte(), rsaPrivateXml As String) As Byte()
         Using ms As New MemoryStream(packet), br As New BinaryReader(ms)
             Dim version = br.ReadByte()
             Dim alg = br.ReadByte()
-            If version <> 2 OrElse alg <> 1 Then Throw New CryptographicException("格式不支持")
+            If version <> 3 OrElse alg <> 1 Then Throw New CryptographicException("格式不支持，本程序只兼容第三版ty语")
             Dim iv = br.ReadBytes(16)
             Dim rsaLenBE = br.ReadBytes(2)
             Dim rsaLen = CUShort((CUShort(rsaLenBE(0)) << 8) Or rsaLenBE(1))
@@ -229,7 +230,7 @@ Public Class Form1
             Dim aadLen = 1 + 1 + iv.Length + 2 + rsaEnc.Length + cipher.Length
             Dim aad(aadLen - 1) As Byte
             Dim off = 0
-            aad(off) = 2 : off += 1 ' version
+            aad(off) = 3 : off += 1 ' version
             aad(off) = 1 : off += 1 ' alg
             Buffer.BlockCopy(iv, 0, aad, off, iv.Length) : off += iv.Length
             Buffer.BlockCopy(rsaLenBE, 0, aad, off, 2) : off += 2
@@ -245,11 +246,11 @@ Public Class Form1
                     session = rsa.Decrypt(rsaEnc, RSAEncryptionPadding.OaepSHA1)
                 End Try
             End Using
-            If session.Length <> 64 Then Throw New CryptographicException("会话密钥长度错误")
+            If session.Length <> 32 Then Throw New CryptographicException("会话密钥长度错误")
 
-            Dim aesKey(31) As Byte, hmacKey(31) As Byte
-            Buffer.BlockCopy(session, 0, aesKey, 0, 32)
-            Buffer.BlockCopy(session, 32, hmacKey, 0, 32)
+            Dim aesKey(15) As Byte, hmacKey(15) As Byte
+            Buffer.BlockCopy(session, 0, aesKey, 0, 16)
+            Buffer.BlockCopy(session, 16, hmacKey, 0, 16)
 
             ' 校验 HMAC
             Using h = New HMACSHA256(hmacKey)
@@ -352,6 +353,10 @@ Public Class Form1
     ' === 压缩/解压 ===
     Private Function CompressString(input As String) As Byte()
         Dim bytes = Encoding.UTF8.GetBytes(input)
+        '智能判断长度，过短不压缩
+        If bytes.Length < 32 Then
+            Return bytes
+        End If
         Using ms As New MemoryStream()
             Using gz As New GZipStream(ms, CompressionLevel.Optimal)
                 gz.Write(bytes, 0, bytes.Length)
@@ -361,18 +366,23 @@ Public Class Form1
     End Function
 
     Private Function DecompressBytes(data As Byte()) As String
-        Using ms As New MemoryStream(data)
-            Using gz As New GZipStream(ms, CompressionMode.Decompress)
-                Using result As New MemoryStream()
-                    gz.CopyTo(result)
-                    Return Encoding.UTF8.GetString(result.ToArray())
+        Try
+            Using ms As New MemoryStream(data)
+                Using gz As New GZipStream(ms, CompressionMode.Decompress)
+                    Using result As New MemoryStream()
+                        gz.CopyTo(result)
+                        Return Encoding.UTF8.GetString(result.ToArray())
+                    End Using
                 End Using
             End Using
-        End Using
+        Catch ex As Exception
+            ' 解压失败说明未压缩，直接返回原始字节对应的字符串
+            Return Encoding.UTF8.GetString(data)
+        End Try
     End Function
 
     ' === 生成密钥对 ===
-    Public Function GenerateRsaXmlPair(Optional keySize As Integer = 3072) As (PublicXml As String, PrivateXml As String)
+    Public Function GenerateRsaXmlPair(Optional keySize As Integer = 2048) As (PublicXml As String, PrivateXml As String)
         Using rsa As RSA = RSA.Create(keySize)
             Dim pub = rsa.ToXmlString(False)
             Dim priv = rsa.ToXmlString(True)
