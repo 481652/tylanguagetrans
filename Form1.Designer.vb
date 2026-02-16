@@ -1,4 +1,4 @@
-Ôªø<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
+<Global.Microsoft.VisualBasic.CompilerServices.DesignerGenerated()>
 Partial Class Form1
     Inherits System.Windows.Forms.Form
 
@@ -6,212 +6,327 @@ Partial Class Form1
 
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
-        Me.txtMain = New System.Windows.Forms.TextBox()
-        Me.grpMain = New System.Windows.Forms.GroupBox()
-        Me.grpControls = New System.Windows.Forms.GroupBox()
-        Me.btnEncrypt = New System.Windows.Forms.Button()
-        Me.btnDecrypt = New System.Windows.Forms.Button()
-        Me.btnCopy = New System.Windows.Forms.Button()
-        Me.btnClear = New System.Windows.Forms.Button()
-        Me.chkCompress = New System.Windows.Forms.CheckBox()
-        Me.grpKeys = New System.Windows.Forms.GroupBox()
-        Me.btnDetectKeys = New System.Windows.Forms.Button()
-        Me.btnGenKeys = New System.Windows.Forms.Button()
-        Me.btnImportPub = New System.Windows.Forms.Button()
-        Me.btnImportPriv = New System.Windows.Forms.Button()
-        Me.lblFooter = New System.Windows.Forms.Label()
-        Me.lblWarn = New System.Windows.Forms.Label()
-        Me.StatusStrip1 = New System.Windows.Forms.StatusStrip()
-        Me.Statuslbl = New System.Windows.Forms.ToolStripStatusLabel()
-        Me.grpMain.SuspendLayout()
-        Me.grpControls.SuspendLayout()
-        Me.grpKeys.SuspendLayout()
-        Me.StatusStrip1.SuspendLayout()
-        Me.SuspendLayout()
-        '
-        'txtMain
-        '
-        Me.txtMain.Anchor = CType((((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left) _
-            Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.txtMain.Location = New System.Drawing.Point(10, 22)
-        Me.txtMain.Multiline = True
-        Me.txtMain.Name = "txtMain"
-        Me.txtMain.ScrollBars = System.Windows.Forms.ScrollBars.Vertical
-        Me.txtMain.Size = New System.Drawing.Size(600, 300)
-        Me.txtMain.TabIndex = 0
-        '
-        'grpMain
-        '
-        Me.grpMain.Anchor = CType(((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Bottom) _
-            Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.grpMain.Controls.Add(Me.txtMain)
-        Me.grpMain.Location = New System.Drawing.Point(12, 12)
-        Me.grpMain.Name = "grpMain"
-        Me.grpMain.Size = New System.Drawing.Size(620, 330)
-        Me.grpMain.TabIndex = 1
-        Me.grpMain.TabStop = False
-        Me.grpMain.Text = "ÊòéÊñá / ÂØÜÊñá"
-        '
-        'grpControls
-        '
-        Me.grpControls.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.grpControls.Controls.Add(Me.btnEncrypt)
-        Me.grpControls.Controls.Add(Me.btnDecrypt)
-        Me.grpControls.Controls.Add(Me.btnCopy)
-        Me.grpControls.Controls.Add(Me.btnClear)
-        Me.grpControls.Controls.Add(Me.chkCompress)
-        Me.grpControls.Location = New System.Drawing.Point(650, 12)
-        Me.grpControls.Name = "grpControls"
-        Me.grpControls.Size = New System.Drawing.Size(200, 200)
-        Me.grpControls.TabIndex = 2
-        Me.grpControls.TabStop = False
-        Me.grpControls.Text = "Êìç‰Ωú"
-        '
-        'btnEncrypt
-        '
-        Me.btnEncrypt.Location = New System.Drawing.Point(20, 25)
-        Me.btnEncrypt.Name = "btnEncrypt"
-        Me.btnEncrypt.Size = New System.Drawing.Size(150, 35)
-        Me.btnEncrypt.TabIndex = 0
-        Me.btnEncrypt.Text = "Âä†ÂØÜ"
-        '
-        'btnDecrypt
-        '
-        Me.btnDecrypt.Location = New System.Drawing.Point(20, 65)
-        Me.btnDecrypt.Name = "btnDecrypt"
-        Me.btnDecrypt.Size = New System.Drawing.Size(150, 35)
-        Me.btnDecrypt.TabIndex = 1
-        Me.btnDecrypt.Text = "Ëß£ÂØÜ"
-        '
-        'btnCopy
-        '
-        Me.btnCopy.Location = New System.Drawing.Point(20, 105)
-        Me.btnCopy.Name = "btnCopy"
-        Me.btnCopy.Size = New System.Drawing.Size(150, 35)
-        Me.btnCopy.TabIndex = 2
-        Me.btnCopy.Text = "Â§çÂà∂ÁªìÊûú"
-        '
-        'btnClear
-        '
-        Me.btnClear.Location = New System.Drawing.Point(20, 145)
-        Me.btnClear.Name = "btnClear"
-        Me.btnClear.Size = New System.Drawing.Size(150, 35)
-        Me.btnClear.TabIndex = 3
-        Me.btnClear.Text = "Ê∏ÖÁ©∫"
-        '
-        'chkCompress
-        '
-        Me.chkCompress.Location = New System.Drawing.Point(20, 180)
-        Me.chkCompress.Name = "chkCompress"
-        Me.chkCompress.Size = New System.Drawing.Size(104, 24)
-        Me.chkCompress.TabIndex = 4
-        Me.chkCompress.Text = "ÂéãÁº©ÂØÜÊñáÈïøÂ∫¶"
-        '
-        'grpKeys
-        '
-        Me.grpKeys.Anchor = CType((System.Windows.Forms.AnchorStyles.Top Or System.Windows.Forms.AnchorStyles.Right), System.Windows.Forms.AnchorStyles)
-        Me.grpKeys.Controls.Add(Me.btnDetectKeys)
-        Me.grpKeys.Controls.Add(Me.btnGenKeys)
-        Me.grpKeys.Controls.Add(Me.btnImportPub)
-        Me.grpKeys.Controls.Add(Me.btnImportPriv)
-        Me.grpKeys.Location = New System.Drawing.Point(650, 220)
-        Me.grpKeys.Name = "grpKeys"
-        Me.grpKeys.Size = New System.Drawing.Size(200, 122)
-        Me.grpKeys.TabIndex = 3
-        Me.grpKeys.TabStop = False
-        Me.grpKeys.Text = "ÂØÜÈí•ÁÆ°ÁêÜ"
-        '
-        'btnDetectKeys
-        '
-        Me.btnDetectKeys.Location = New System.Drawing.Point(20, 86)
-        Me.btnDetectKeys.Name = "btnDetectKeys"
-        Me.btnDetectKeys.Size = New System.Drawing.Size(150, 28)
-        Me.btnDetectKeys.TabIndex = 3
-        Me.btnDetectKeys.Text = "ÂØºÂÖ•Áé∞ÊúâÂØÜÈí•"
-        '
-        'btnGenKeys
-        '
-        Me.btnGenKeys.Location = New System.Drawing.Point(20, 25)
-        Me.btnGenKeys.Name = "btnGenKeys"
-        Me.btnGenKeys.Size = New System.Drawing.Size(150, 28)
-        Me.btnGenKeys.TabIndex = 0
-        Me.btnGenKeys.Text = "ÁîüÊàêÂØÜÈí•ÂØπ"
-        '
-        'btnImportPub
-        '
-        Me.btnImportPub.Location = New System.Drawing.Point(20, 55)
-        Me.btnImportPub.Name = "btnImportPub"
-        Me.btnImportPub.Size = New System.Drawing.Size(73, 28)
-        Me.btnImportPub.TabIndex = 1
-        Me.btnImportPub.Text = "ÂØºÂÖ•ÂÖ¨Èí•"
-        '
-        'btnImportPriv
-        '
-        Me.btnImportPriv.Location = New System.Drawing.Point(100, 55)
-        Me.btnImportPriv.Name = "btnImportPriv"
-        Me.btnImportPriv.Size = New System.Drawing.Size(70, 28)
-        Me.btnImportPriv.TabIndex = 2
-        Me.btnImportPriv.Text = "ÂØºÂÖ•ÁßÅÈí•"
-        '
-        'lblFooter
-        '
-        Me.lblFooter.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.lblFooter.AutoSize = True
-        Me.lblFooter.Location = New System.Drawing.Point(12, 345)
-        Me.lblFooter.Name = "lblFooter"
-        Me.lblFooter.Size = New System.Drawing.Size(112, 17)
-        Me.lblFooter.TabIndex = 0
-        Me.lblFooter.Text = "By LCS 2020-2025"
-        '
-        'lblWarn
-        '
-        Me.lblWarn.Anchor = CType((System.Windows.Forms.AnchorStyles.Bottom Or System.Windows.Forms.AnchorStyles.Left), System.Windows.Forms.AnchorStyles)
-        Me.lblWarn.AutoSize = True
-        Me.lblWarn.ForeColor = System.Drawing.Color.Red
-        Me.lblWarn.Location = New System.Drawing.Point(388, 345)
-        Me.lblWarn.Name = "lblWarn"
-        Me.lblWarn.Size = New System.Drawing.Size(464, 17)
-        Me.lblWarn.TabIndex = 4
-        Me.lblWarn.Text = "Ê≥®ÊÑèÔºöÊú¨ÁâàÊú¨ÁöÑÂä†ÂØÜÂíåÂéãÁº©ÁÆóÊ≥ï‰∏éËÄÅÁâà‰∏çÂêåÔºå‰∏çÂÖºÂÆπËÄÅÁâàÔºÅÊú¨Â∑•ÂÖ∑‰∏•Á¶ÅÁî®‰∫éËøùÊ≥ïÊ¥ªÂä®ÔºÅ"
-        '
-        'StatusStrip1
-        '
-        Me.StatusStrip1.Items.AddRange(New System.Windows.Forms.ToolStripItem() {Me.Statuslbl})
-        Me.StatusStrip1.Location = New System.Drawing.Point(0, 389)
-        Me.StatusStrip1.Name = "StatusStrip1"
-        Me.StatusStrip1.Size = New System.Drawing.Size(864, 22)
-        Me.StatusStrip1.TabIndex = 5
-        Me.StatusStrip1.Text = "StatusStrip1"
-        '
-        'Statuslbl
-        '
-        Me.Statuslbl.Name = "Statuslbl"
-        Me.Statuslbl.Size = New System.Drawing.Size(32, 17)
-        Me.Statuslbl.Text = "Â∞±Áª™"
-        '
-        'Form1
-        '
-        Me.ClientSize = New System.Drawing.Size(864, 411)
-        Me.Controls.Add(Me.StatusStrip1)
-        Me.Controls.Add(Me.lblWarn)
-        Me.Controls.Add(Me.lblFooter)
-        Me.Controls.Add(Me.grpKeys)
-        Me.Controls.Add(Me.grpControls)
-        Me.Controls.Add(Me.grpMain)
-        Me.Font = New System.Drawing.Font("ÂæÆËΩØÈõÖÈªë", 9.0!)
-        Me.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle
-        Me.MaximizeBox = False
-        Me.Name = "Form1"
-        Me.Text = "TYËØ≠Âä†ÂØÜÂô®2.2"
-        Me.grpMain.ResumeLayout(False)
-        Me.grpMain.PerformLayout()
-        Me.grpControls.ResumeLayout(False)
-        Me.grpKeys.ResumeLayout(False)
-        Me.StatusStrip1.ResumeLayout(False)
-        Me.StatusStrip1.PerformLayout()
-        Me.ResumeLayout(False)
-        Me.PerformLayout()
+        Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(Form1))
+        txtMain = New TextBox()
+        grpMain = New GroupBox()
+        Label2 = New Label()
+        Button2 = New Button()
+        Button1 = New Button()
+        Label1 = New Label()
+        ListBox1 = New ListBox()
+        grpControls = New GroupBox()
+        Button3 = New Button()
+        RadioButton2 = New RadioButton()
+        Label3 = New Label()
+        RadioButton1 = New RadioButton()
+        btnEncrypt = New Button()
+        btnDecrypt = New Button()
+        btnCopy = New Button()
+        btnClear = New Button()
+        chkCompress = New CheckBox()
+        grpKeys = New GroupBox()
+        Button5 = New Button()
+        Button4 = New Button()
+        Label4 = New Label()
+        btnGenKeys = New Button()
+        lblWarn = New Label()
+        StatusStrip1 = New StatusStrip()
+        Statuslbl = New ToolStripStatusLabel()
+        LinkLabel1 = New LinkLabel()
+        grpMain.SuspendLayout()
+        grpControls.SuspendLayout()
+        grpKeys.SuspendLayout()
+        StatusStrip1.SuspendLayout()
+        SuspendLayout()
+        ' 
+        ' txtMain
+        ' 
+        txtMain.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
+        txtMain.Location = New Point(25, 31)
+        txtMain.Multiline = True
+        txtMain.Name = "txtMain"
+        txtMain.ScrollBars = ScrollBars.Vertical
+        txtMain.Size = New Size(466, 276)
+        txtMain.TabIndex = 0
+        ' 
+        ' grpMain
+        ' 
+        grpMain.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left
+        grpMain.Controls.Add(Label2)
+        grpMain.Controls.Add(txtMain)
+        grpMain.Location = New Point(205, 12)
+        grpMain.Name = "grpMain"
+        grpMain.Size = New Size(510, 330)
+        grpMain.TabIndex = 1
+        grpMain.TabStop = False
+        grpMain.Text = "ƒ⁄»›π‹¿Ì"
+        ' 
+        ' Label2
+        ' 
+        Label2.AutoSize = True
+        Label2.Location = New Point(381, 310)
+        Label2.Name = "Label2"
+        Label2.Size = New Size(63, 17)
+        Label2.TabIndex = 5
+        Label2.Text = "◊÷∑˚ ˝£∫0"
+        ' 
+        ' Button2
+        ' 
+        Button2.Location = New Point(100, 170)
+        Button2.Name = "Button2"
+        Button2.Size = New Size(71, 27)
+        Button2.TabIndex = 4
+        Button2.Text = "…æ≥˝ª·ª∞"
+        Button2.UseVisualStyleBackColor = True
+        ' 
+        ' Button1
+        ' 
+        Button1.Location = New Point(20, 170)
+        Button1.Name = "Button1"
+        Button1.Size = New Size(71, 27)
+        Button1.TabIndex = 3
+        Button1.Text = "±£¥Êª·ª∞"
+        Button1.UseVisualStyleBackColor = True
+        ' 
+        ' Label1
+        ' 
+        Label1.AutoSize = True
+        Label1.Location = New Point(12, 21)
+        Label1.Name = "Label1"
+        Label1.Size = New Size(32, 17)
+        Label1.TabIndex = 2
+        Label1.Text = "ª·ª∞"
+        ' 
+        ' ListBox1
+        ' 
+        ListBox1.FormattingEnabled = True
+        ListBox1.ItemHeight = 17
+        ListBox1.Items.AddRange(New Object() {"Œ¥√¸√˚ª·ª∞"})
+        ListBox1.Location = New Point(17, 41)
+        ListBox1.Name = "ListBox1"
+        ListBox1.Size = New Size(154, 123)
+        ListBox1.TabIndex = 1
+        ' 
+        ' grpControls
+        ' 
+        grpControls.Anchor = AnchorStyles.Top Or AnchorStyles.Right
+        grpControls.Controls.Add(Button3)
+        grpControls.Controls.Add(RadioButton2)
+        grpControls.Controls.Add(Label3)
+        grpControls.Controls.Add(RadioButton1)
+        grpControls.Controls.Add(btnEncrypt)
+        grpControls.Controls.Add(btnDecrypt)
+        grpControls.Controls.Add(btnCopy)
+        grpControls.Controls.Add(btnClear)
+        grpControls.Controls.Add(chkCompress)
+        grpControls.Location = New Point(721, 12)
+        grpControls.Name = "grpControls"
+        grpControls.Size = New Size(129, 330)
+        grpControls.TabIndex = 2
+        grpControls.TabStop = False
+        grpControls.Text = "≤Ÿ◊˜"
+        ' 
+        ' Button3
+        ' 
+        Button3.Location = New Point(6, 288)
+        Button3.Name = "Button3"
+        Button3.Size = New Size(118, 35)
+        Button3.TabIndex = 8
+        Button3.Text = "±£¥Ê‘§…Ë"
+        Button3.UseVisualStyleBackColor = True
+        ' 
+        ' RadioButton2
+        ' 
+        RadioButton2.AutoSize = True
+        RadioButton2.Location = New Point(5, 228)
+        RadioButton2.Name = "RadioButton2"
+        RadioButton2.Size = New Size(91, 21)
+        RadioButton2.TabIndex = 7
+        RadioButton2.Text = "2.2æ…∞ÊÀ„∑®"
+        RadioButton2.UseVisualStyleBackColor = True
+        ' 
+        ' Label3
+        ' 
+        Label3.AutoSize = True
+        Label3.Location = New Point(6, 183)
+        Label3.Name = "Label3"
+        Label3.Size = New Size(56, 17)
+        Label3.TabIndex = 6
+        Label3.Text = "À„∑®—°‘Ò"
+        ' 
+        ' RadioButton1
+        ' 
+        RadioButton1.AutoSize = True
+        RadioButton1.Checked = True
+        RadioButton1.Location = New Point(6, 203)
+        RadioButton1.Name = "RadioButton1"
+        RadioButton1.Size = New Size(91, 21)
+        RadioButton1.TabIndex = 5
+        RadioButton1.TabStop = True
+        RadioButton1.Text = "3.0»´–¬À„∑®"
+        RadioButton1.UseVisualStyleBackColor = True
+        ' 
+        ' btnEncrypt
+        ' 
+        btnEncrypt.Location = New Point(6, 25)
+        btnEncrypt.Name = "btnEncrypt"
+        btnEncrypt.Size = New Size(118, 35)
+        btnEncrypt.TabIndex = 0
+        btnEncrypt.Text = "º”√‹"
+        ' 
+        ' btnDecrypt
+        ' 
+        btnDecrypt.Location = New Point(6, 64)
+        btnDecrypt.Name = "btnDecrypt"
+        btnDecrypt.Size = New Size(118, 35)
+        btnDecrypt.TabIndex = 1
+        btnDecrypt.Text = "Ω‚√‹"
+        ' 
+        ' btnCopy
+        ' 
+        btnCopy.Location = New Point(6, 104)
+        btnCopy.Name = "btnCopy"
+        btnCopy.Size = New Size(118, 35)
+        btnCopy.TabIndex = 2
+        btnCopy.Text = "∏¥÷∆Ω·π˚"
+        ' 
+        ' btnClear
+        ' 
+        btnClear.Location = New Point(6, 145)
+        btnClear.Name = "btnClear"
+        btnClear.Size = New Size(118, 35)
+        btnClear.TabIndex = 3
+        btnClear.Text = "«Âø’"
+        ' 
+        ' chkCompress
+        ' 
+        chkCompress.Enabled = False
+        chkCompress.Location = New Point(6, 258)
+        chkCompress.Name = "chkCompress"
+        chkCompress.Size = New Size(104, 24)
+        chkCompress.TabIndex = 4
+        chkCompress.Text = "—πÀı√‹Œƒ≥§∂»"
+        ' 
+        ' grpKeys
+        ' 
+        grpKeys.Anchor = AnchorStyles.Top Or AnchorStyles.Right
+        grpKeys.Controls.Add(Button5)
+        grpKeys.Controls.Add(Button4)
+        grpKeys.Controls.Add(Label4)
+        grpKeys.Controls.Add(btnGenKeys)
+        grpKeys.Controls.Add(Button2)
+        grpKeys.Controls.Add(Button1)
+        grpKeys.Controls.Add(Label1)
+        grpKeys.Controls.Add(ListBox1)
+        grpKeys.Location = New Point(12, 12)
+        grpKeys.Name = "grpKeys"
+        grpKeys.Size = New Size(188, 330)
+        grpKeys.TabIndex = 3
+        grpKeys.TabStop = False
+        grpKeys.Text = "√‹‘øπ‹¿Ì"
+        ' 
+        ' Button5
+        ' 
+        Button5.Location = New Point(21, 239)
+        Button5.Name = "Button5"
+        Button5.Size = New Size(147, 27)
+        Button5.TabIndex = 7
+        Button5.Text = "µº≥ˆª·ª∞"
+        Button5.UseVisualStyleBackColor = True
+        ' 
+        ' Button4
+        ' 
+        Button4.Location = New Point(22, 206)
+        Button4.Name = "Button4"
+        Button4.Size = New Size(147, 27)
+        Button4.TabIndex = 6
+        Button4.Text = "º”»Îª·ª∞"
+        Button4.UseVisualStyleBackColor = True
+        ' 
+        ' Label4
+        ' 
+        Label4.AutoSize = True
+        Label4.Location = New Point(12, 271)
+        Label4.Name = "Label4"
+        Label4.Size = New Size(32, 17)
+        Label4.TabIndex = 5
+        Label4.Text = "√‹‘ø"
+        ' 
+        ' btnGenKeys
+        ' 
+        btnGenKeys.Location = New Point(21, 291)
+        btnGenKeys.Name = "btnGenKeys"
+        btnGenKeys.Size = New Size(150, 28)
+        btnGenKeys.TabIndex = 0
+        btnGenKeys.Text = "ÃÌº”√‹‘ø∂‘"
+        ' 
+        ' lblWarn
+        ' 
+        lblWarn.Anchor = AnchorStyles.Bottom Or AnchorStyles.Left
+        lblWarn.AutoSize = True
+        lblWarn.ForeColor = Color.Red
+        lblWarn.Location = New Point(432, 363)
+        lblWarn.Name = "lblWarn"
+        lblWarn.Size = New Size(421, 17)
+        lblWarn.TabIndex = 4
+        lblWarn.Text = "◊¢“‚£∫±æ∞Ê±æ÷ªºÊ»›2.2∞Ê±æ°£±æπ§æﬂ—œΩ˚”√”⁄Œ•∑®ªÓ∂Ø£¨Œ•’ﬂ∫Ûπ˚◊‘––≥–µ££°"
+        ' 
+        ' StatusStrip1
+        ' 
+        StatusStrip1.Items.AddRange(New ToolStripItem() {Statuslbl})
+        StatusStrip1.Location = New Point(0, 389)
+        StatusStrip1.Name = "StatusStrip1"
+        StatusStrip1.Size = New Size(864, 22)
+        StatusStrip1.TabIndex = 5
+        StatusStrip1.Text = "StatusStrip1"
+        ' 
+        ' Statuslbl
+        ' 
+        Statuslbl.Name = "Statuslbl"
+        Statuslbl.Size = New Size(32, 17)
+        Statuslbl.Text = "æÕ–˜"
+        ' 
+        ' LinkLabel1
+        ' 
+        LinkLabel1.ActiveLinkColor = Color.Blue
+        LinkLabel1.AutoSize = True
+        LinkLabel1.LinkColor = Color.FromArgb(CByte(94), CByte(80), CByte(206))
+        LinkLabel1.Location = New Point(12, 363)
+        LinkLabel1.Name = "LinkLabel1"
+        LinkLabel1.Size = New Size(208, 17)
+        LinkLabel1.TabIndex = 6
+        LinkLabel1.TabStop = True
+        LinkLabel1.Text = "By LCS 2020-2026£®µ„Œ“ºÏ≤È∏¸–¬£©"
+        LinkLabel1.VisitedLinkColor = Color.FromArgb(CByte(94), CByte(80), CByte(206))
+        ' 
+        ' Form1
+        ' 
+        AutoScaleDimensions = New SizeF(96.0F, 96.0F)
+        AutoScaleMode = AutoScaleMode.Dpi
+        ClientSize = New Size(864, 411)
+        Controls.Add(LinkLabel1)
+        Controls.Add(StatusStrip1)
+        Controls.Add(lblWarn)
+        Controls.Add(grpKeys)
+        Controls.Add(grpControls)
+        Controls.Add(grpMain)
+        Font = New Font("Œ¢»Ì—≈∫⁄", 9.0F)
+        ForeColor = SystemColors.ControlText
+        FormBorderStyle = FormBorderStyle.FixedSingle
+        Icon = CType(resources.GetObject("$this.Icon"), Icon)
+        MaximizeBox = False
+        Name = "Form1"
+        Text = "TY”Ôº”√‹∆˜3.0"
+        grpMain.ResumeLayout(False)
+        grpMain.PerformLayout()
+        grpControls.ResumeLayout(False)
+        grpControls.PerformLayout()
+        grpKeys.ResumeLayout(False)
+        grpKeys.PerformLayout()
+        StatusStrip1.ResumeLayout(False)
+        StatusStrip1.PerformLayout()
+        ResumeLayout(False)
+        PerformLayout()
 
     End Sub
 
@@ -225,11 +340,20 @@ Partial Class Form1
     Friend WithEvents chkCompress As CheckBox
     Friend WithEvents grpKeys As GroupBox
     Friend WithEvents btnGenKeys As Button
-    Friend WithEvents btnImportPub As Button
-    Friend WithEvents btnImportPriv As Button
-    Friend WithEvents lblFooter As Label
     Friend WithEvents lblWarn As Label
-    Friend WithEvents btnDetectKeys As Button
     Friend WithEvents StatusStrip1 As StatusStrip
     Friend WithEvents Statuslbl As ToolStripStatusLabel
+    Friend WithEvents Label2 As Label
+    Friend WithEvents Button2 As Button
+    Friend WithEvents Button1 As Button
+    Friend WithEvents Label1 As Label
+    Friend WithEvents ListBox1 As ListBox
+    Friend WithEvents Label4 As Label
+    Friend WithEvents Label3 As Label
+    Friend WithEvents RadioButton1 As RadioButton
+    Friend WithEvents RadioButton2 As RadioButton
+    Friend WithEvents Button3 As Button
+    Friend WithEvents LinkLabel1 As LinkLabel
+    Friend WithEvents Button4 As Button
+    Friend WithEvents Button5 As Button
 End Class

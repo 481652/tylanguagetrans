@@ -24,9 +24,13 @@ Namespace My
         <Global.System.Diagnostics.DebuggerStepThroughAttribute()> _
         Public Sub New()
             MyBase.New(Global.Microsoft.VisualBasic.ApplicationServices.AuthenticationMode.Windows)
-            Me.IsSingleInstance = false
-            Me.EnableVisualStyles = true
-            Me.SaveMySettingsOnExit = true
+            Me.IsSingleInstance = False
+            ' Enable per-monitor DPI awareness before enabling visual styles so WinForms scales correctly on high-DPI displays
+            System.Windows.Forms.Application.SetHighDpiMode(System.Windows.Forms.HighDpiMode.PerMonitorV2)
+            Me.EnableVisualStyles = True
+            ' Ensure GDI+ text rendering compatibility is set (call before creating any forms)
+            System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(False)
+            Me.SaveMySettingsOnExit = True
             Me.ShutDownStyle = Global.Microsoft.VisualBasic.ApplicationServices.ShutdownMode.AfterMainFormCloses
         End Sub
 
