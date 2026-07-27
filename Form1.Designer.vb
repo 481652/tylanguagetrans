@@ -59,7 +59,7 @@ Partial Class Form1
         grpMain.Size = New Size(510, 330)
         grpMain.TabIndex = 1
         grpMain.TabStop = False
-        grpMain.Text = "ÄÚÈİ¹ÜÀí"
+        grpMain.Text = "å†…å®¹ç®¡ç†"
         ' 
         ' Label2
         ' 
@@ -68,7 +68,7 @@ Partial Class Form1
         Label2.Name = "Label2"
         Label2.Size = New Size(63, 17)
         Label2.TabIndex = 5
-        Label2.Text = "×Ö·ûÊı£º0"
+        Label2.Text = "å­—ç¬¦æ•°ï¼š0"
         ' 
         ' Button2
         ' 
@@ -76,7 +76,7 @@ Partial Class Form1
         Button2.Name = "Button2"
         Button2.Size = New Size(71, 27)
         Button2.TabIndex = 4
-        Button2.Text = "É¾³ı»á»°"
+        Button2.Text = "åˆ é™¤ä¼šè¯"
         Button2.UseVisualStyleBackColor = True
         ' 
         ' Button1
@@ -85,7 +85,7 @@ Partial Class Form1
         Button1.Name = "Button1"
         Button1.Size = New Size(71, 27)
         Button1.TabIndex = 3
-        Button1.Text = "±£´æ»á»°"
+        Button1.Text = "ä¿å­˜ä¼šè¯"
         Button1.UseVisualStyleBackColor = True
         ' 
         ' Label1
@@ -95,13 +95,12 @@ Partial Class Form1
         Label1.Name = "Label1"
         Label1.Size = New Size(32, 17)
         Label1.TabIndex = 2
-        Label1.Text = "»á»°"
+        Label1.Text = "ä¼šè¯"
         ' 
         ' ListBox1
         ' 
         ListBox1.FormattingEnabled = True
         ListBox1.ItemHeight = 17
-        ListBox1.Items.AddRange(New Object() {"Î´ÃüÃû»á»°"})
         ListBox1.Location = New Point(17, 41)
         ListBox1.Name = "ListBox1"
         ListBox1.Size = New Size(154, 123)
@@ -124,7 +123,7 @@ Partial Class Form1
         grpControls.Size = New Size(129, 330)
         grpControls.TabIndex = 2
         grpControls.TabStop = False
-        grpControls.Text = "²Ù×÷"
+        grpControls.Text = "æ“ä½œ"
         ' 
         ' Button3
         ' 
@@ -132,7 +131,7 @@ Partial Class Form1
         Button3.Name = "Button3"
         Button3.Size = New Size(118, 35)
         Button3.TabIndex = 8
-        Button3.Text = "±£´æÔ¤Éè"
+        Button3.Text = "ä¿å­˜é¢„è®¾"
         Button3.UseVisualStyleBackColor = True
         ' 
         ' RadioButton2
@@ -142,7 +141,7 @@ Partial Class Form1
         RadioButton2.Name = "RadioButton2"
         RadioButton2.Size = New Size(91, 21)
         RadioButton2.TabIndex = 7
-        RadioButton2.Text = "2.2¾É°æËã·¨"
+        RadioButton2.Text = "2.2 æ—§ç‰ˆç®—æ³•"
         RadioButton2.UseVisualStyleBackColor = True
         ' 
         ' Label3
@@ -152,7 +151,7 @@ Partial Class Form1
         Label3.Name = "Label3"
         Label3.Size = New Size(56, 17)
         Label3.TabIndex = 6
-        Label3.Text = "Ëã·¨Ñ¡Ôñ"
+        Label3.Text = "ç®—æ³•é€‰æ‹©"
         ' 
         ' RadioButton1
         ' 
@@ -163,7 +162,7 @@ Partial Class Form1
         RadioButton1.Size = New Size(91, 21)
         RadioButton1.TabIndex = 5
         RadioButton1.TabStop = True
-        RadioButton1.Text = "3.0È«ĞÂËã·¨"
+        RadioButton1.Text = "3.0 å…¨æ–°ç®—æ³•"
         RadioButton1.UseVisualStyleBackColor = True
         ' 
         ' btnEncrypt
@@ -172,7 +171,7 @@ Partial Class Form1
         btnEncrypt.Name = "btnEncrypt"
         btnEncrypt.Size = New Size(118, 35)
         btnEncrypt.TabIndex = 0
-        btnEncrypt.Text = "¼ÓÃÜ"
+        btnEncrypt.Text = "åŠ å¯†"
         ' 
         ' btnDecrypt
         ' 
@@ -180,7 +179,7 @@ Partial Class Form1
         btnDecrypt.Name = "btnDecrypt"
         btnDecrypt.Size = New Size(118, 35)
         btnDecrypt.TabIndex = 1
-        btnDecrypt.Text = "½âÃÜ"
+        btnDecrypt.Text = "è§£å¯†"
         ' 
         ' btnCopy
         ' 
@@ -188,7 +187,7 @@ Partial Class Form1
         btnCopy.Name = "btnCopy"
         btnCopy.Size = New Size(118, 35)
         btnCopy.TabIndex = 2
-        btnCopy.Text = "¸´ÖÆ½á¹û"
+        btnCopy.Text = "å¤åˆ¶ç»“æœ"
         ' 
         ' btnClear
         ' 
@@ -196,7 +195,7 @@ Partial Class Form1
         btnClear.Name = "btnClear"
         btnClear.Size = New Size(118, 35)
         btnClear.TabIndex = 3
-        btnClear.Text = "Çå¿Õ"
+        btnClear.Text = "æ¸…ç©º"
         ' 
         ' chkCompress
         ' 
@@ -205,7 +204,7 @@ Partial Class Form1
         chkCompress.Name = "chkCompress"
         chkCompress.Size = New Size(104, 24)
         chkCompress.TabIndex = 4
-        chkCompress.Text = "Ñ¹ËõÃÜÎÄ³¤¶È"
+        chkCompress.Text = "å‹ç¼©å¯†æ–‡é•¿åº¦"
         ' 
         ' grpKeys
         ' 
@@ -223,7 +222,7 @@ Partial Class Form1
         grpKeys.Size = New Size(188, 330)
         grpKeys.TabIndex = 3
         grpKeys.TabStop = False
-        grpKeys.Text = "ÃÜÔ¿¹ÜÀí"
+        grpKeys.Text = "å¯†é’¥ç®¡ç†"
         ' 
         ' Button5
         ' 
@@ -231,7 +230,7 @@ Partial Class Form1
         Button5.Name = "Button5"
         Button5.Size = New Size(147, 27)
         Button5.TabIndex = 7
-        Button5.Text = "µ¼³ö»á»°"
+        Button5.Text = "å¯¼å‡ºä¼šè¯"
         Button5.UseVisualStyleBackColor = True
         ' 
         ' Button4
@@ -240,7 +239,7 @@ Partial Class Form1
         Button4.Name = "Button4"
         Button4.Size = New Size(147, 27)
         Button4.TabIndex = 6
-        Button4.Text = "¼ÓÈë»á»°"
+        Button4.Text = "å¯¼å…¥ä¼šè¯"
         Button4.UseVisualStyleBackColor = True
         ' 
         ' Label4
@@ -250,7 +249,7 @@ Partial Class Form1
         Label4.Name = "Label4"
         Label4.Size = New Size(32, 17)
         Label4.TabIndex = 5
-        Label4.Text = "ÃÜÔ¿"
+        Label4.Text = "å¯†é’¥"
         ' 
         ' btnGenKeys
         ' 
@@ -258,7 +257,7 @@ Partial Class Form1
         btnGenKeys.Name = "btnGenKeys"
         btnGenKeys.Size = New Size(150, 28)
         btnGenKeys.TabIndex = 0
-        btnGenKeys.Text = "Ìí¼ÓÃÜÔ¿¶Ô"
+        btnGenKeys.Text = "ç”Ÿæˆå¯†é’¥å¯¹"
         ' 
         ' lblWarn
         ' 
@@ -269,7 +268,7 @@ Partial Class Form1
         lblWarn.Name = "lblWarn"
         lblWarn.Size = New Size(421, 17)
         lblWarn.TabIndex = 4
-        lblWarn.Text = "×¢Òâ£º±¾°æ±¾Ö»¼æÈİ2.2°æ±¾¡£±¾¹¤¾ßÑÏ½ûÓÃÓÚÎ¥·¨»î¶¯£¬Î¥Õßºó¹û×ÔĞĞ³Ğµ££¡"
+        lblWarn.Text = "æ³¨æ„ï¼šæœ¬ç‰ˆæœ¬ä»…å…¼å®¹ 2.2 ç‰ˆæœ¬ã€‚æœ¬å·¥å…·ä¸¥ç¦ç”¨äºè¿æ³•æ´»åŠ¨ï¼Œè¿è€…åæœè‡ªè¡Œæ‰¿æ‹…ï¼"
         ' 
         ' StatusStrip1
         ' 
@@ -284,7 +283,7 @@ Partial Class Form1
         ' 
         Statuslbl.Name = "Statuslbl"
         Statuslbl.Size = New Size(32, 17)
-        Statuslbl.Text = "¾ÍĞ÷"
+        Statuslbl.Text = "å°±ç»ª"
         ' 
         ' LinkLabel1
         ' 
@@ -296,7 +295,7 @@ Partial Class Form1
         LinkLabel1.Size = New Size(208, 17)
         LinkLabel1.TabIndex = 6
         LinkLabel1.TabStop = True
-        LinkLabel1.Text = "By LCS 2020-2026£¨µãÎÒ¼ì²é¸üĞÂ£©"
+        LinkLabel1.Text = "By LCS 2020-2026ï¼ˆç‚¹å‡»æ£€æŸ¥æ›´æ–°ï¼‰"
         LinkLabel1.VisitedLinkColor = Color.FromArgb(CByte(94), CByte(80), CByte(206))
         ' 
         ' Form1
@@ -310,13 +309,13 @@ Partial Class Form1
         Controls.Add(grpKeys)
         Controls.Add(grpControls)
         Controls.Add(grpMain)
-        Font = New Font("Î¢ÈíÑÅºÚ", 9.0F)
+        Font = New Font("Microsoft YaHei UI", 9.0F)
         ForeColor = SystemColors.ControlText
         FormBorderStyle = FormBorderStyle.FixedSingle
         Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MaximizeBox = False
         Name = "Form1"
-        Text = "TYÓï¼ÓÃÜÆ÷3.0"
+        Text = "TYè¯­åŠ å¯†å™¨ 3.0"
         grpMain.ResumeLayout(False)
         grpMain.PerformLayout()
         grpControls.ResumeLayout(False)

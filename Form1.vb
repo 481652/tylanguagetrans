@@ -3,6 +3,7 @@ Imports System.IO.Compression
 Imports System.Net.Http
 Imports System.Security.Cryptography
 Imports System.Text
+Imports System.Text.Json
 Imports Org.BouncyCastle.Asn1
 Imports Org.BouncyCastle.Asn1.Pkcs
 Imports Org.BouncyCastle.Asn1.X509
@@ -16,6 +17,11 @@ Imports tylanguagetrans.My
 
 Public Class Form1
 
+    Private Const MaxSessionFileBytes As Long = 4L * 1024 * 1024
+    Private Const MaxUpdateDownloadBytes As Long = 512L * 1024 * 1024
+    Private Const MaxUpdateExtractedBytes As Long = 1024L * 1024 * 1024
+    Private Const MaxUpdateEntries As Integer = 2048
+
     Private Class SessionInfo
         Public Property Name As String
         Public Property PublicXml As String
@@ -25,6 +31,9 @@ Public Class Form1
     End Class
 
     Private sessions As New List(Of SessionInfo)()
+    Private Shared ReadOnly SessionEntropy As Byte() = Encoding.UTF8.GetBytes("tylanguagetrans-sessions-v1")
+    Private Shared ReadOnly SessionDirectory As String = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LCS", "tylanguagetrans")
+    Private Shared ReadOnly SessionFilePath As String = Path.Combine(SessionDirectory, "sessions.dat")
 
     ' === 词表映射（长度必须64，每个两字） ===
     Private Shared ReadOnly wordList As String() = {
@@ -81,7 +90,7 @@ Public Class Form1
         "毒气", "生化", "核蛋", "放辐", "沾染", "洗消", "侦插", "巡锣",
         "岗少", "暗少", "明少", "潜服", "埋扶", "设伏", "突袭", "夜袭",
         "强攻", "佯功", "迂回", "穿叉", "包切", "围煎", "清缴", "肃清",
-        "俘卤", "审迅", "口供", "情爆", "密电", "破译", "截获", "监听",
+        "俘卤", "审迅", "口供", "情爆", "密电", "破译", "截获", "收听",
         "电苔", "频段", "跳频", "加密", "解码", "呼号", "代号", "密语",
         "洞铃", "洞山", "洞死", "洞舞", "洞溜", "洞漆", "洞拔", "洞酒",
         "拐零", "拐一", "拐二", "拐三", "幺洞", "两拐", "三八", "酒瓶",
@@ -95,6 +104,13 @@ Public Class Form1
     ' 保存当前密钥
     Private PublicKeyXml As String = ""
     Private PrivateKeyXml As String = ""
+    Private isLoadingSession As Boolean
+
+    Shared Sub New()
+        If WordList256.Length <> 256 OrElse WordList256.Any(Function(word) word.Length <> 2) OrElse WordList256.Distinct().Count() <> 256 Then
+            Throw New InvalidOperationException("WordList256 必须包含 256 个互不重复的双字词元")
+        End If
+    End Sub
 
     Private Sub btnEncrypt_Click(sender As Object, e As EventArgs) Handles btnEncrypt.Click
         Try
@@ -137,73 +153,83 @@ Public Class Form1
     End Sub
 
     Private Sub btnGenKeys_Click(sender As Object, e As EventArgs) Handles btnGenKeys.Click
-        If RadioButton1.Checked = False Then
-            Dim kp = GenerateRsaXmlPair(2048)
-            PublicKeyXml = kp.PublicXml
-            PrivateKeyXml = kp.PrivateXml
-            File.WriteAllText("public.xml", PublicKeyXml)
-            File.WriteAllText("private.xml", PrivateKeyXml)
-            Statuslbl.Text = "密钥对已生成并保存在与本程序同路径的 public.xml / private.xml"
-        Else
-            '生成 X25519 密钥对并以可识别前缀保存（Base64 编码的 SubjectPublicKeyInfo / PKCS8）
-            Dim kp = GenerateX25519KeyPair()
-            PublicKeyXml = kp.PublicBase64
-            PrivateKeyXml = kp.PrivateBase64
-            File.WriteAllText("public.xml", PublicKeyXml)
-            File.WriteAllText("private.xml", PrivateKeyXml)
-            Statuslbl.Text = "密钥对已生成并保存在与本程序同路径的 public.xml / private.xml"
-        End If
-        ListBox1.SelectedItem = Nothing
+        Try
+            If RadioButton1.Checked = False Then
+                Dim kp = GenerateRsaXmlPair(2048)
+                PublicKeyXml = kp.PublicXml
+                PrivateKeyXml = kp.PrivateXml
+            Else
+                Dim kp = GenerateX25519KeyPair()
+                PublicKeyXml = kp.PublicBase64
+                PrivateKeyXml = kp.PrivateBase64
+            End If
+            ListBox1.SelectedItem = Nothing
+            Statuslbl.Text = "密钥对已生成。请保存为会话以安全保留密钥。"
+        Catch ex As Exception
+            MsgBox("生成密钥失败：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+        End Try
     End Sub
 
     '导入会话
     Private Sub Button4_Click(sender As Object, e As EventArgs) Handles Button4.Click
-        Dim ofd As New OpenFileDialog
-        ofd.Filter = "TY 会话文件|*.tysess"
-        If ofd.ShowDialog = DialogResult.OK Then
-            Try
-                ' 先以字节读取文件，以支持明文文本与用密码加密的二进制格式
-                Dim fileBytes = File.ReadAllBytes(ofd.FileName)
-                Dim content As String = Nothing
+        Using ofd As New OpenFileDialog With {.Filter = "TY 会话文件|*.tysess"}
+            If ofd.ShowDialog = DialogResult.OK Then
+                Try
+                    ' 先以字节读取文件，以支持明文文本与用密码加密的二进制格式
+                    If New FileInfo(ofd.FileName).Length > MaxSessionFileBytes Then Throw New FormatException("会话文件不能超过 4 MB")
+                    Dim fileBytes = File.ReadAllBytes(ofd.FileName)
+                    Dim content As String = Nothing
 
-                ' 检查是否为加密的会话（EncryptBytesWithPassword 会在开头写入 ASCII "TYSESS1"）
-                If fileBytes.Length >= 7 Then
-                    Dim hdr = Encoding.ASCII.GetString(fileBytes, 0, 7)
-                    If hdr = "TYSESS1" Then
-                        ' 需要密码解密
-                        Dim password = InputBox("请输入用于加密会话文件的密码：", "输入密码", "")
-                        If password Is Nothing Then
-                            Statuslbl.Text = "导入已取消。"
-                            Return
+                    ' 检查是否为加密的会话（EncryptBytesWithPassword 会在开头写入 ASCII "TYSESS1"）
+                    If fileBytes.Length >= 7 Then
+                        Dim hdr = Encoding.ASCII.GetString(fileBytes, 0, 7)
+                        If hdr = "TYSESS1" Then
+                            ' 需要密码解密
+                            Dim password As String = Nothing
+                            If Not TryPromptPassword("输入密码", "请输入用于加密会话文件的密码：", password) Then
+                                Statuslbl.Text = "导入已取消。"
+                                Return
+                            End If
+                            Dim plainBytes = DecryptBytesWithPassword(fileBytes, password)
+                            content = Encoding.UTF8.GetString(plainBytes)
                         End If
-                        Dim plainBytes = DecryptBytesWithPassword(fileBytes, password)
-                        content = Encoding.UTF8.GetString(plainBytes)
                     End If
-                End If
 
-                If content Is Nothing Then
-                    ' 不是加密文件，按文本读取（假设 UTF8）
-                    content = Encoding.UTF8.GetString(fileBytes)
-                End If
+                    If content Is Nothing Then
+                        ' 不是加密文件，按文本读取（假设 UTF8）
+                        content = Encoding.UTF8.GetString(fileBytes)
+                    End If
 
-                Dim lines = content.Split(New String() {Environment.NewLine}, StringSplitOptions.None)
-                If lines.Length < 5 Then Throw New Exception("文件格式错误：行数不足")
-                Dim header = lines(0).Split("|"c)
-                If header.Length < 3 Then Throw New Exception("文件格式错误：头部字段不足")
-                Dim si As New SessionInfo With {
-                    .Name = header(0),
+                    Dim lines = content.Replace(vbCrLf, vbLf).Replace(vbCr, vbLf).Split(ControlChars.Lf)
+                    If lines.Length < 5 Then Throw New Exception("文件格式错误：行数不足")
+                    Dim header = lines(0).Split("|"c)
+                    If header.Length < 3 Then Throw New Exception("文件格式错误：头部字段不足")
+                    Dim si As New SessionInfo With {
+                    .Name = header(0).Trim(),
                     .AlgorithmType = Integer.Parse(header(1)),
                     .DoUseCompress = (header(2) = "1"),
                     .PublicXml = ExtractSection(lines, "----PUB----", "----PRIV----"),
                     .PrivateXml = ExtractSection(lines, "----PRIV----", Nothing)
                 }
-                sessions.Add(si)
-                ListBox1.Items.Add(si.Name)
-                Statuslbl.Text = "会话已导入。"
-            Catch ex As Exception
-                MsgBox("导入失败：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
-            End Try
-        End If
+                    If String.IsNullOrWhiteSpace(si.Name) Then Throw New FormatException("会话名称不能为空")
+                    If sessions.Any(Function(existing) String.Equals(existing.Name, si.Name, StringComparison.OrdinalIgnoreCase)) Then
+                        Throw New InvalidOperationException("已存在同名会话")
+                    End If
+                    ValidateSession(si)
+                    sessions.Add(si)
+                    ListBox1.Items.Add(si.Name)
+                    If SaveSessions() Then
+                        ListBox1.SelectedIndex = sessions.Count - 1
+                        Statuslbl.Text = "会话已导入并安全保存。"
+                    Else
+                        sessions.Remove(si)
+                        ListBox1.Items.RemoveAt(ListBox1.Items.Count - 1)
+                    End If
+                Catch ex As Exception
+                    MsgBox("导入失败：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+                End Try
+            End If
+        End Using
     End Sub
 
     '从行数组中提取两标记之间的内容（不包含标记行）。v2 可为 Nothing 表示提取到末尾。
@@ -227,40 +253,76 @@ Public Class Form1
             Return
         End If
         Dim si = sessions(ListBox1.SelectedIndex)
-        Dim sfd As New SaveFileDialog
-        sfd.Filter = "TY 会话文件|*.tysess"
-        sfd.FileName = SanitizeFileName(si.Name) & ".tysess"
-        If sfd.ShowDialog = DialogResult.OK Then
-            ' 简单文本格式：第一行为 Name|Algorithm|DoUseCompress
-            ' 然后一行----PUB----，接着公钥内容，----PRIV----，私钥内容
-            Dim sb As New StringBuilder
-            sb.AppendLine($"{si.Name}|{si.AlgorithmType}|{If(si.DoUseCompress, 1, 0)}")
-            sb.AppendLine("----PUB----")
-            sb.AppendLine(si.PublicXml)
-            sb.AppendLine("----PRIV----")
-            sb.AppendLine(si.PrivateXml)
+        Using sfd As New SaveFileDialog With {
+            .Filter = "TY 会话文件|*.tysess",
+            .FileName = SanitizeFileName(si.Name) & ".tysess"
+        }
+            If sfd.ShowDialog = DialogResult.OK Then
+                ' 简单文本格式：第一行为 Name|Algorithm|DoUseCompress
+                ' 然后一行----PUB----，接着公钥内容，----PRIV----，私钥内容
+                Dim sb As New StringBuilder
+                sb.AppendLine($"{si.Name}|{si.AlgorithmType}|{If(si.DoUseCompress, 1, 0)}")
+                sb.AppendLine("----PUB----")
+                sb.AppendLine(si.PublicXml)
+                sb.AppendLine("----PRIV----")
+                sb.AppendLine(si.PrivateXml)
 
-            ' 询问是否使用密码加密导出的会话
-            Dim password = InputBox("请输入密码以加密导出的会话文件（留空则不加密）：", "加密选项", "")
-            If password Is Nothing Then
-                ' 用户取消
-                Statuslbl.Text = "导出已取消。"
-                Return
-            End If
+                ' 询问是否使用密码加密导出的会话
+                Dim password As String = Nothing
+                If Not TryPromptPassword("加密选项", "请输入密码以加密导出的会话文件（留空则不加密）：", password) Then
+                    Statuslbl.Text = "导出已取消。"
+                    Return
+                End If
 
-            If String.IsNullOrEmpty(password) Then
-                ' 不加密，导出为明文文本
-                File.WriteAllText(sfd.FileName, sb.ToString, Encoding.UTF8)
-                Statuslbl.Text = "会话已导出（未加密）。"
-            Else
-                ' 使用密码加密后导出（AES-GCM，PBKDF2 派生密钥）
-                Dim plainBytes = Encoding.UTF8.GetBytes(sb.ToString())
-                Dim enc = EncryptBytesWithPassword(plainBytes, password)
-                File.WriteAllBytes(sfd.FileName, enc)
-                Statuslbl.Text = "会话已导出并已用密码加密。"
+                If String.IsNullOrEmpty(password) Then
+                    ' 不加密，导出为明文文本
+                    File.WriteAllText(sfd.FileName, sb.ToString, Encoding.UTF8)
+                    Statuslbl.Text = "会话已导出（未加密）。"
+                Else
+                    ' 使用密码加密后导出（AES-GCM，PBKDF2 派生密钥）
+                    Dim plainBytes = Encoding.UTF8.GetBytes(sb.ToString())
+                    Dim enc = EncryptBytesWithPassword(plainBytes, password)
+                    File.WriteAllBytes(sfd.FileName, enc)
+                    Statuslbl.Text = "会话已导出并已用密码加密。"
+                End If
             End If
-        End If
+        End Using
     End Sub
+
+    Private Function TryPromptPassword(title As String, prompt As String, ByRef password As String) As Boolean
+        Using dialog As New Form(), promptLabel As New Label(), passwordBox As New TextBox(), okButton As New Button(), cancelButton As New Button()
+            dialog.Text = title
+            dialog.FormBorderStyle = FormBorderStyle.FixedDialog
+            dialog.StartPosition = FormStartPosition.CenterParent
+            dialog.ClientSize = New Size(390, 125)
+            dialog.MinimizeBox = False
+            dialog.MaximizeBox = False
+            dialog.ShowInTaskbar = False
+
+            promptLabel.AutoSize = True
+            promptLabel.Location = New Point(12, 15)
+            promptLabel.Text = prompt
+            passwordBox.Location = New Point(15, 45)
+            passwordBox.Size = New Size(360, 23)
+            passwordBox.UseSystemPasswordChar = True
+            okButton.Location = New Point(219, 84)
+            okButton.Size = New Size(75, 27)
+            okButton.Text = "确定"
+            okButton.DialogResult = DialogResult.OK
+            cancelButton.Location = New Point(300, 84)
+            cancelButton.Size = New Size(75, 27)
+            cancelButton.Text = "取消"
+            cancelButton.DialogResult = DialogResult.Cancel
+
+            dialog.Controls.AddRange({promptLabel, passwordBox, okButton, cancelButton})
+            dialog.AcceptButton = okButton
+            dialog.CancelButton = cancelButton
+
+            If dialog.ShowDialog(Me) <> DialogResult.OK Then Return False
+            password = passwordBox.Text
+            Return True
+        End Using
+    End Function
 
     ' ========= 混合加密实现 =========
 
@@ -331,6 +393,9 @@ Public Class Form1
         Array.Copy(enc, pos, itb, 0, 4) : pos += 4
         If BitConverter.IsLittleEndian Then Array.Reverse(itb)
         Dim iterations = BitConverter.ToInt32(itb, 0)
+        If iterations < 100000 OrElse iterations > 2000000 Then
+            Throw New FormatException("数据格式错误：不支持的密钥派生迭代次数")
+        End If
 
         Dim salt(15) As Byte
         Array.Copy(enc, pos, salt, 0, 16) : pos += 16
@@ -575,10 +640,12 @@ Public Class Form1
 
     '解密实现
     Private Function HybridDecrypt(packet As Byte(), rsaPrivateXml As String) As Byte()
+        If packet Is Nothing OrElse packet.Length < 2 Then Throw New FormatException("密文包长度不足")
         Using ms As New MemoryStream(packet), br As New BinaryReader(ms)
             Dim version = br.ReadByte()
             Dim alg = br.ReadByte()
             If version = 4 AndAlso alg = 2 Then
+                If packet.Length < 2 + 32 + 12 + 16 Then Throw New FormatException("X25519 密文包长度不足")
                 'X25519 + AES-GCM 解密
                 '读取 32 字节的 raw ephemeral 公钥并重建为 SubjectPublicKeyInfo
                 Dim ephRaw = br.ReadBytes(32)
@@ -642,10 +709,12 @@ Public Class Form1
                     Return plain
                 End Try
             ElseIf version = 3 AndAlso alg = 1 Then
+                If packet.Length < 2 + 16 + 2 + 16 Then Throw New FormatException("RSA 密文包长度不足")
                 '旧版 RSA + AES-CBC + HMAC
                 Dim iv = br.ReadBytes(16)
                 Dim rsaLenBE = br.ReadBytes(2)
                 Dim rsaLen = CUShort((CUShort(rsaLenBE(0)) << 8) Or rsaLenBE(1))
+                If rsaLen = 0 OrElse rsaLen > ms.Length - ms.Position - 16 Then Throw New FormatException("RSA 密钥数据长度错误")
                 Dim rsaEnc = br.ReadBytes(rsaLen)
                 Dim remaining = br.ReadBytes(CInt(ms.Length - ms.Position))
                 Dim cipherLen = remaining.Length - 16 ' 修改为16字节
@@ -684,12 +753,9 @@ Public Class Form1
                 ' 校验 HMAC
                 Using h = New HMACSHA256(hmacKey)
                     Dim calc = h.ComputeHash(aad)
-                    ' 只比对前16字节
-                    For i = 0 To 15
-                        If calc(i) <> tag(i) Then
-                            Throw New CryptographicException("完整性校验失败")
-                        End If
-                    Next
+                    If Not CryptographicOperations.FixedTimeEquals(calc.AsSpan(0, 16), tag) Then
+                        Throw New CryptographicException("完整性校验失败")
+                    End If
                 End Using
 
                 ' AES 解密正文
@@ -708,15 +774,6 @@ Public Class Form1
         End Using
     End Function
 
-    Private Function ConstantTimeEqual(a As Byte(), b As Byte()) As Boolean
-        If a.Length <> b.Length Then Return False
-        Dim diff As Integer = 0
-        For i = 0 To a.Length - 1
-            diff = diff Or (a(i) Xor b(i))
-        Next
-        Return diff = 0
-    End Function
-
     ' === 编码/解码 ===
     Private Function BytesToWordString(data As Byte()) As String
         Dim sb As New StringBuilder()
@@ -732,8 +789,10 @@ Public Class Form1
     Private Function WordStringToBytes(s As String) As Byte()
         Dim parts = s.Split("！"c)
         Dim outBytes As New List(Of Byte)(parts.Length)
-        For Each pair In parts
-            If pair.Length < 4 Then Continue For
+        For i = 0 To parts.Length - 1
+            Dim pair = parts(i)
+            If pair.Length = 0 AndAlso i = parts.Length - 1 Then Continue For
+            If pair.Length <> 4 Then Throw New FormatException("输入格式不正确：每组必须包含两个双字词元")
             Dim w1 = pair.Substring(0, 2)
             Dim w2 = pair.Substring(2, 2)
             Dim hi = Array.IndexOf(wordList, w1)
@@ -916,21 +975,40 @@ Public Class Form1
             chkCompress.Enabled = True
         Else
             chkCompress.Enabled = False
-            chkCompress.Checked = False
+            chkCompress.Checked = True
         End If
         '如果当前处于会话中，更新当前会话的算法设置
         If ListBox1.SelectedIndex >= 0 Then
+            If isLoadingSession Then Return
             Dim si = sessions(ListBox1.SelectedIndex)
+            Dim previousAlgorithm = si.AlgorithmType
+            Dim previousCompress = si.DoUseCompress
             si.AlgorithmType = If(RadioButton1.Checked, 1, 0)
             si.DoUseCompress = chkCompress.Checked
-            SaveSessions() ' 保存更新后的会话设置
+            If Not SaveSessions() Then
+                si.AlgorithmType = previousAlgorithm
+                si.DoUseCompress = previousCompress
+            End If
         End If
+    End Sub
+
+    Private Sub chkCompress_CheckedChanged(sender As Object, e As EventArgs) Handles chkCompress.CheckedChanged
+        If isLoadingSession OrElse ListBox1.SelectedIndex < 0 OrElse ListBox1.SelectedIndex >= sessions.Count Then Return
+        Dim session = sessions(ListBox1.SelectedIndex)
+        Dim previous = session.DoUseCompress
+        session.DoUseCompress = chkCompress.Checked
+        If Not SaveSessions() Then session.DoUseCompress = previous
     End Sub
 
     '添加会话
     Private Sub Button1_Click(sender As Object, e As EventArgs) Handles Button1.Click
         Dim name = InputBox("请输入会话名称", "保存当前会话")
         If String.IsNullOrWhiteSpace(name) Then Return
+        name = name.Trim()
+        If sessions.Any(Function(existing) String.Equals(existing.Name, name, StringComparison.OrdinalIgnoreCase)) Then
+            MsgBox("已存在同名会话，请使用其他名称。", MsgBoxStyle.OkOnly + MsgBoxStyle.Information, "提示")
+            Return
+        End If
 
         '保存当前正在使用的密钥到会话（保留原有密钥）
         If String.IsNullOrEmpty(PublicKeyXml) OrElse String.IsNullOrEmpty(PrivateKeyXml) Then
@@ -940,8 +1018,11 @@ Public Class Form1
         Dim si As New SessionInfo() With {.Name = name, .PublicXml = PublicKeyXml, .PrivateXml = PrivateKeyXml, .AlgorithmType = If(RadioButton1.Checked, 1, 0), .DoUseCompress = chkCompress.Checked}
         sessions.Add(si)
         ListBox1.Items.Add(name)
-        '保存所有会话数据到磁盘
-        SaveSessions()
+        If Not SaveSessions() Then
+            sessions.Remove(si)
+            ListBox1.Items.RemoveAt(ListBox1.Items.Count - 1)
+            Return
+        End If
         '激活新会话
         PublicKeyXml = si.PublicXml
         PrivateKeyXml = si.PrivateXml
@@ -954,11 +1035,16 @@ Public Class Form1
     Private Sub Button2_Click(sender As Object, e As EventArgs) Handles Button2.Click
         If ListBox1.SelectedIndex >= 0 Then
             Dim index = ListBox1.SelectedIndex
-            Dim name = sessions(index).Name
+            Dim removedSession = sessions(index)
+            Dim name = removedSession.Name
             sessions.RemoveAt(index)
             ListBox1.Items.RemoveAt(index)
-            ' 重新保存所有会话文件以保持索引一致
-            SaveSessions()
+            If Not SaveSessions() Then
+                sessions.Insert(index, removedSession)
+                ListBox1.Items.Insert(index, name)
+                ListBox1.SelectedIndex = index
+                Return
+            End If
             ' 如果还有会话则激活第一个，否则清空当前密钥
             If sessions.Count > 0 Then
                 ListBox1.SelectedIndex = Math.Min(index, sessions.Count - 1)
@@ -983,55 +1069,126 @@ Public Class Form1
     Private Sub Form1_Load(sender As Object, e As EventArgs) Handles MyBase.Load
         If Settings1.Default.AlgorithmType = 1 Then
             RadioButton1.Checked = True
+            chkCompress.Checked = True
         Else
             RadioButton2.Checked = True
             chkCompress.Enabled = True
             chkCompress.Checked = Settings1.Default.DoUseCompress
         End If
-        LoadSessions()
+        Try
+            LoadSessions()
+        Catch ex As Exception
+            MsgBox("加载会话失败：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+            Statuslbl.Text = "会话加载失败，原数据未被修改。"
+        End Try
         'MsgBox（"此版本为内测版。您在这个版本体验到的功能可能与正式版有出入。请勿泄露此版本，并在测试结束后通过检查更新功能更新到最新版本。测试完成后请销毁这个文件，谢谢配合。", MsgBoxStyle.Exclamation + MsgBoxStyle.OkOnly, "测试版警告"）
     End Sub
 
-    '保存会话数据到磁盘：每个会话一个公私钥文件，和一个sessions.txt记录会话列表与算法设置
-    Private Sub SaveSessions()
-        Dim lines As New List(Of String)
-        For i As Integer = 0 To sessions.Count - 1
-            Dim safeName = SanitizeFileName(sessions(i).Name)
-            Dim fpub = $"{safeName}_public.xml"
-            Dim fpriv = $"{safeName}_private.xml"
-            File.WriteAllText(fpub, sessions(i).PublicXml)
-            File.WriteAllText(fpriv, sessions(i).PrivateXml)
-            ' 保存会话的算法设置：Name|AlgorithmType|DoUseCompress
-            lines.Add($"{sessions(i).Name}|{sessions(i).AlgorithmType}|{If(sessions(i).DoUseCompress, 1, 0)}")
-        Next
-        File.WriteAllLines("sessions.txt", lines)
-    End Sub
+    Private Function SaveSessions() As Boolean
+        Try
+            Directory.CreateDirectory(SessionDirectory)
+            ValidateSessions(sessions)
+            Dim protectedBytes = SerializeProtectedSessions(sessions)
+            Dim tempPath = SessionFilePath & ".tmp"
+            File.WriteAllBytes(tempPath, protectedBytes)
+            File.Move(tempPath, SessionFilePath, True)
+            Return True
+        Catch ex As Exception
+            MsgBox("保存会话失败：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+            Statuslbl.Text = "会话保存失败。"
+            Return False
+        End Try
+    End Function
+
+    Private Function SerializeProtectedSessions(items As List(Of SessionInfo)) As Byte()
+        Dim plain = JsonSerializer.SerializeToUtf8Bytes(items)
+        Return ProtectedData.Protect(plain, SessionEntropy, DataProtectionScope.CurrentUser)
+    End Function
+
+    Private Function DeserializeProtectedSessions(protectedBytes As Byte()) As List(Of SessionInfo)
+        If protectedBytes Is Nothing OrElse protectedBytes.Length = 0 Then Throw New FormatException("会话数据为空")
+        Dim plain = ProtectedData.Unprotect(protectedBytes, SessionEntropy, DataProtectionScope.CurrentUser)
+        Dim result = JsonSerializer.Deserialize(Of List(Of SessionInfo))(plain)
+        If result Is Nothing Then Throw New FormatException("会话数据格式错误")
+        ValidateSessions(result)
+        Return result
+    End Function
 
     Private Sub LoadSessions()
         sessions.Clear()
         ListBox1.Items.Clear()
-        If File.Exists("sessions.txt") Then
-            Dim lines = File.ReadAllLines("sessions.txt")
-            For i As Integer = 0 To lines.Length - 1
-                Dim parts = lines(i).Split("|"c)
-                Dim name = parts(0)
-                Dim alg = 0
-                Dim doComp = False
-                If parts.Length >= 2 Then Integer.TryParse(parts(1), alg)
-                If parts.Length >= 3 Then doComp = (parts(2) = "1")
-                Dim safeName = SanitizeFileName(name)
-                Dim pubFile = $"{safeName}_public.xml"
-                Dim privFile = $"{safeName}_private.xml"
-                Dim pub = If(File.Exists(pubFile), File.ReadAllText(pubFile), "")
-                Dim priv = If(File.Exists(privFile), File.ReadAllText(privFile), "")
-                Dim si As New SessionInfo() With {.Name = name, .PublicXml = pub, .PrivateXml = priv, .AlgorithmType = alg, .DoUseCompress = doComp}
-                sessions.Add(si)
-                ListBox1.Items.Add(name)
-            Next
-            If sessions.Count > 0 Then
-                ListBox1.SelectedIndex = 0
-            End If
+        If File.Exists(SessionFilePath) Then
+            Dim protectedBytes = File.ReadAllBytes(SessionFilePath)
+            sessions = DeserializeProtectedSessions(protectedBytes)
+        ElseIf File.Exists("sessions.txt") Then
+            LoadLegacySessions()
+            If SaveSessions() Then DeleteLegacySessionFiles()
         End If
+
+        For Each session In sessions
+            ListBox1.Items.Add(session.Name)
+        Next
+        If sessions.Count > 0 Then
+            ListBox1.SelectedIndex = 0
+        End If
+    End Sub
+
+    Private Sub ValidateSessions(items As List(Of SessionInfo))
+        Dim names As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+        For Each session In items
+            If session Is Nothing OrElse String.IsNullOrWhiteSpace(session.Name) Then Throw New FormatException("会话数据包含空名称")
+            session.Name = session.Name.Trim()
+            If Not names.Add(session.Name) Then Throw New FormatException($"会话数据包含重复名称：{session.Name}")
+            ValidateSession(session)
+        Next
+    End Sub
+
+    Private Sub ValidateSession(session As SessionInfo)
+        If session.AlgorithmType <> 0 AndAlso session.AlgorithmType <> 1 Then Throw New FormatException($"会话 {session.Name} 的算法类型无效")
+        If String.IsNullOrEmpty(session.PublicXml) OrElse String.IsNullOrEmpty(session.PrivateXml) Then Throw New FormatException($"会话 {session.Name} 的密钥不完整")
+        Dim publicIsX25519 = session.PublicXml.StartsWith("X25519:", StringComparison.Ordinal)
+        Dim privateIsX25519 = session.PrivateXml.StartsWith("X25519:", StringComparison.Ordinal)
+        If publicIsX25519 <> privateIsX25519 OrElse publicIsX25519 <> (session.AlgorithmType = 1) Then
+            Throw New FormatException($"会话 {session.Name} 的算法与密钥类型不匹配")
+        End If
+        If session.AlgorithmType = 1 Then session.DoUseCompress = True
+    End Sub
+
+    Private Sub LoadLegacySessions()
+        Dim names As New HashSet(Of String)(StringComparer.OrdinalIgnoreCase)
+        For Each line In File.ReadAllLines("sessions.txt")
+            If String.IsNullOrWhiteSpace(line) Then Continue For
+            Dim parts = line.Split("|"c)
+            If parts.Length < 1 OrElse String.IsNullOrWhiteSpace(parts(0)) Then Throw New FormatException("旧会话数据格式错误")
+            Dim name = parts(0).Trim()
+            If Not names.Add(name) Then Throw New FormatException($"旧会话数据包含重复名称：{name}")
+            Dim alg As Integer
+            Dim doComp = parts.Length >= 3 AndAlso parts(2) = "1"
+            If parts.Length >= 2 AndAlso Not Integer.TryParse(parts(1), alg) Then Throw New FormatException($"会话 {name} 的算法类型无效")
+            Dim safeName = SanitizeFileName(name)
+            Dim pubFile = $"{safeName}_public.xml"
+            Dim privFile = $"{safeName}_private.xml"
+            If Not File.Exists(pubFile) OrElse Not File.Exists(privFile) Then Throw New FileNotFoundException($"会话 {name} 的密钥文件缺失")
+            sessions.Add(New SessionInfo With {
+                .Name = name,
+                .PublicXml = File.ReadAllText(pubFile),
+                .PrivateXml = File.ReadAllText(privFile),
+                .AlgorithmType = alg,
+                .DoUseCompress = doComp
+            })
+        Next
+        ValidateSessions(sessions)
+    End Sub
+
+    Private Sub DeleteLegacySessionFiles()
+        For Each session In sessions
+            Dim safeName = SanitizeFileName(session.Name)
+            Dim pubFile = $"{safeName}_public.xml"
+            Dim privFile = $"{safeName}_private.xml"
+            If File.Exists(pubFile) Then File.Delete(pubFile)
+            If File.Exists(privFile) Then File.Delete(privFile)
+        Next
+        File.Delete("sessions.txt")
     End Sub
 
     '将会话名转换为安全的文件名
@@ -1054,65 +1211,147 @@ Public Class Form1
             Dim si = sessions(ListBox1.SelectedIndex)
             PublicKeyXml = si.PublicXml
             PrivateKeyXml = si.PrivateXml
-            '恢复该会话保存的算法与压缩设置
-            If si.AlgorithmType = 1 Then
-                RadioButton1.Checked = True
-            Else
-                RadioButton2.Checked = True
-            End If
-            '在切换 RadioButton 后设置压缩复选框（RadioButton 的 CheckedChanged 会控制 Enabled）
-            chkCompress.Checked = si.DoUseCompress
+            isLoadingSession = True
+            Try
+                RadioButton1.Checked = (si.AlgorithmType = 1)
+                RadioButton2.Checked = (si.AlgorithmType <> 1)
+                chkCompress.Enabled = RadioButton2.Checked
+                chkCompress.Checked = (si.AlgorithmType = 1 OrElse si.DoUseCompress)
+            Finally
+                isLoadingSession = False
+            End Try
             txtMain.Clear()
             Statuslbl.Text = $"已切换到会话: {si.Name}"
         End If
     End Sub
 
     Private Async Sub LinkLabel1_LinkClicked(sender As Object, e As LinkLabelLinkClickedEventArgs) Handles LinkLabel1.LinkClicked
-        '检查更新
         Statuslbl.Text = "正在检查更新..."
         Dim url As String = "https://lcs.rth1.xyz/documents/tylanguagetrans.txt"
-        Dim httpClient As New HttpClient()
-        httpClient.Timeout = TimeSpan.FromSeconds(30)
-        httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
-        httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
-        Try
-            '发送GET请求并获取响应内容
-            Dim response As HttpResponseMessage = Await httpClient.GetAsync(url)
+        Using httpClient As New HttpClient()
+            httpClient.Timeout = TimeSpan.FromMinutes(10)
+            httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36")
+            httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            Try
+                Using response As HttpResponseMessage = Await httpClient.GetAsync(url)
+                    response.EnsureSuccessStatusCode()
+                    Dim content As String = Await response.Content.ReadAsStringAsync()
+                    If content.Length > 4096 Then Throw New FormatException("更新信息格式错误")
+                    Dim contents As String() = content.Split(",")
+                    Dim CurrentVersion As Version = Application.Info.Version
+                    If contents.Length < 2 Then Throw New FormatException("更新信息格式错误")
+                    Dim LatestVersion As Version = Version.Parse(contents(0).Trim())
+                    If LatestVersion > CurrentVersion Then
+                        Dim downloadUri As New Uri(contents(1).Trim(), UriKind.Absolute)
+                        If downloadUri.Scheme <> Uri.UriSchemeHttps Then Throw New FormatException("更新下载地址必须使用 HTTPS")
+                        Dim expectedHash = If(contents.Length >= 3, contents(2).Trim(), "")
+                        If expectedHash.Length > 0 AndAlso (expectedHash.Length <> 64 OrElse Not expectedHash.All(Function(c) Uri.IsHexDigit(c))) Then
+                            Throw New FormatException("更新包 SHA-256 格式错误")
+                        End If
+
+                        Dim warning = If(expectedHash.Length = 0, vbCrLf & vbCrLf & "当前更新清单未提供 SHA-256，无法验证文件完整性。", "")
+                        Dim answer = MsgBox("检测到新版本，是否立即下载并启动？" & vbCrLf & "当前版本：" & CurrentVersion.ToString() & vbCrLf & "最新版本：" & LatestVersion.ToString() & warning,
+                                    MsgBoxStyle.YesNo + MsgBoxStyle.Question, "更新提示")
+                        If answer <> MsgBoxResult.Yes Then
+                            Statuslbl.Text = "已取消更新。"
+                            Return
+                        End If
+
+                        Statuslbl.Text = "正在下载新版本..."
+                        Dim updateRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "LCS", "tylanguagetrans", "updates")
+                        Directory.CreateDirectory(updateRoot)
+                        Dim zipPath = Path.Combine(updateRoot, $"update-{Guid.NewGuid():N}.zip")
+                        Dim extractPath = Path.Combine(updateRoot, $"{LatestVersion}-{Guid.NewGuid():N}")
+                        Try
+                            Await DownloadUpdateAsync(httpClient, downloadUri, zipPath)
+                            If expectedHash.Length > 0 Then VerifyFileSha256(zipPath, expectedHash)
+                            Statuslbl.Text = "正在解压新版本..."
+                            ExtractUpdateSafely(zipPath, extractPath)
+
+                            Dim executables = Directory.GetFiles(extractPath, "tylanguagetrans.exe", SearchOption.AllDirectories)
+                            If executables.Length <> 1 Then Throw New InvalidDataException("更新包中必须包含且只能包含一个 tylanguagetrans.exe")
+                            Process.Start(New ProcessStartInfo With {
+                        .FileName = executables(0),
+                        .WorkingDirectory = Path.GetDirectoryName(executables(0)),
+                        .UseShellExecute = True
+                    })
+                            System.Windows.Forms.Application.Exit()
+                        Catch
+                            If Directory.Exists(extractPath) Then Directory.Delete(extractPath, True)
+                            Throw
+                        Finally
+                            If File.Exists(zipPath) Then File.Delete(zipPath)
+                        End Try
+                    Else
+                        Statuslbl.Text = "当前已是最新版本!"
+                    End If
+                End Using
+            Catch ex As HttpRequestException
+                MsgBox("获取更新失败：发送请求时出错，可能是无网络连接、防火墙阻止或LCS服务出现问题！", MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+                Statuslbl.Text = $"检查更新失败。"
+            Catch ex As TaskCanceledException
+                MsgBox("获取更新失败：请求超时，可能是网络连接差或LCS服务出现问题！" & vbCrLf & "详细信息：", MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+                Statuslbl.Text = $"检查更新失败。"
+            Catch ex As Exception
+                MsgBox("获取更新失败：发生未知错误。" & vbCrLf & "详细信息：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
+                Statuslbl.Text = $"检查更新失败。"
+            End Try
+        End Using
+    End Sub
+
+    Private Async Function DownloadUpdateAsync(httpClient As HttpClient, downloadUri As Uri, destinationPath As String) As Task
+        Using response = Await httpClient.GetAsync(downloadUri, HttpCompletionOption.ResponseHeadersRead)
             response.EnsureSuccessStatusCode()
-            Dim content As String = Await response.Content.ReadAsStringAsync()
-            '处理响应内容
-            Dim contents As String() = content.Split(",")
-            Dim CurrentVersion As Version = Application.Info.Version
-            Dim LatestVersion As Version = Version.Parse(contents(0).Trim())
-            If LatestVersion > CurrentVersion Then
-                MsgBox("检测到新版本！重启后自动更新，点【确定】重启。" & vbCrLf & "当前版本：" & CurrentVersion.ToString() & vbCrLf & "最新版本：" & contents(0), MsgBoxStyle.OkOnly + MsgBoxStyle.Information, "更新提示")
-                Statuslbl.Text = $"检测到新版本！"
-                '下载新版本
-                Dim newVersionUrl As String = contents(1).Trim()
-                Dim newVersionPath As String = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"TY语加密器{contents(0)}.zip")
-                Dim newVersionBytes As Byte() = Await httpClient.GetByteArrayAsync(newVersionUrl)
-                File.WriteAllBytes(newVersionPath, newVersionBytes)
-                '解压新版本
-                Dim extractPath As String = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, $"TY语加密器{contents(0)}")
-                ZipFile.ExtractToDirectory(newVersionPath, extractPath)
-                If Directory.Exists(newVersionPath) Then
-                    Directory.Delete(newVersionPath, True)
-                End If
-                Process.Start(extractPath & "\tylanguagetrans.exe")
-                System.Windows.Forms.Application.Exit()
-            Else
-                Statuslbl.Text = $"当前已是最新版本!"
+            Dim finalUri = response.RequestMessage?.RequestUri
+            If finalUri Is Nothing OrElse finalUri.Scheme <> Uri.UriSchemeHttps Then Throw New HttpRequestException("更新下载重定向到了非 HTTPS 地址")
+            If response.Content.Headers.ContentLength.HasValue AndAlso response.Content.Headers.ContentLength.Value > MaxUpdateDownloadBytes Then
+                Throw New InvalidDataException("更新包超过 512 MB 限制")
             End If
-        Catch ex As HttpRequestException
-            MsgBox("获取更新失败：发送请求时出错，可能是无网络连接、防火墙阻止或LCS服务出现问题！", MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
-            Statuslbl.Text = $"检查更新失败。"
-        Catch ex As TaskCanceledException
-            MsgBox("获取更新失败：请求超时，可能是网络连接差或LCS服务出现问题！" & vbCrLf & "详细信息：", MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
-            Statuslbl.Text = $"检查更新失败。"
-        Catch ex As Exception
-            MsgBox("获取更新失败：发生未知错误。" & vbCrLf & "详细信息：" & ex.Message, MsgBoxStyle.OkOnly + MsgBoxStyle.Critical, "错误")
-            Statuslbl.Text = $"检查更新失败。"
-        End Try
+
+            Using source = Await response.Content.ReadAsStreamAsync(), destination = New FileStream(destinationPath, FileMode.CreateNew, FileAccess.Write, FileShare.None, 81920, True)
+                Dim buffer(81919) As Byte
+                Dim total As Long
+                Do
+                    Dim read = Await source.ReadAsync(buffer.AsMemory(0, buffer.Length))
+                    If read = 0 Then Exit Do
+                    total += read
+                    If total > MaxUpdateDownloadBytes Then Throw New InvalidDataException("更新包超过 512 MB 限制")
+                    Await destination.WriteAsync(buffer.AsMemory(0, read))
+                Loop
+            End Using
+        End Using
+    End Function
+
+    Private Sub VerifyFileSha256(filePath As String, expectedHash As String)
+        Using stream = File.OpenRead(filePath)
+            Dim actualHash = Convert.ToHexString(SHA256.HashData(stream))
+            If Not String.Equals(actualHash, expectedHash, StringComparison.OrdinalIgnoreCase) Then
+                Throw New CryptographicException("更新包 SHA-256 校验失败")
+            End If
+        End Using
+    End Sub
+
+    Private Sub ExtractUpdateSafely(zipPath As String, destinationDirectory As String)
+        Directory.CreateDirectory(destinationDirectory)
+        Dim destinationRoot = Path.GetFullPath(destinationDirectory) & Path.DirectorySeparatorChar
+        Using archive = ZipFile.OpenRead(zipPath)
+            If archive.Entries.Count > MaxUpdateEntries Then Throw New InvalidDataException("更新包文件数量过多")
+            Dim totalExtracted As Long
+            For Each entry In archive.Entries
+                totalExtracted += entry.Length
+                If totalExtracted > MaxUpdateExtractedBytes Then Throw New InvalidDataException("更新包解压后超过 1 GB 限制")
+
+                Dim targetPath = Path.GetFullPath(Path.Combine(destinationDirectory, entry.FullName))
+                If Not targetPath.StartsWith(destinationRoot, StringComparison.OrdinalIgnoreCase) Then Throw New InvalidDataException("更新包包含非法路径")
+                If String.IsNullOrEmpty(entry.Name) Then
+                    Directory.CreateDirectory(targetPath)
+                Else
+                    Dim parent = Path.GetDirectoryName(targetPath)
+                    If Not String.IsNullOrEmpty(parent) Then Directory.CreateDirectory(parent)
+                    entry.ExtractToFile(targetPath, False)
+                End If
+            Next
+        End Using
     End Sub
 
 

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TY语加密器 - 网页版</title>
+  <style>
+:root{--bg-dark:#0f1419;--bg-panel:#1a2332;--bg-input:#243447;--accent:#1d9bf0;--accent-hover:#1a8cd8;--text:#e7e9ea;--text-muted:#8b98a5;--border:#38444d}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Noto Sans SC",sans-serif;background:var(--bg-dark);color:var(--text);min-height:100vh;line-height:1.5}
+.app{max-width:1100px;margin:0 auto;padding:1.5rem;min-height:100vh;display:flex;flex-direction:column}
+.header{text-align:center;margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.header h1{font-size:1.75rem;font-weight:600;margin-bottom:0.25rem}
+.version{font-size:0.85rem;color:var(--accent);font-weight:500}
+.subtitle{color:var(--text-muted);font-size:0.9rem}
+.main{display:flex;gap:1.5rem;flex:1}
+.sidebar{flex-shrink:0;width:200px}
+.content-area{flex:1;display:flex;gap:1.5rem;min-width:0}
+.panel{background:var(--bg-panel);border-radius:12px;padding:1.25rem;border:1px solid var(--border)}
+.panel h2{font-size:0.95rem;color:var(--text-muted);margin-bottom:1rem;font-weight:500}
+.keys-panel{display:flex;flex-direction:column;gap:1rem}
+.session-list-wrap label,.algo-section label{display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.4rem}
+.session-list{list-style:none;max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;background:var(--bg-input)}
+.session-list li{padding:0.5rem 0.75rem;cursor:pointer;font-size:0.9rem;border-bottom:1px solid var(--border);transition:background 0.15s}
+.session-list li:last-child{border-bottom:none}
+.session-list li:hover{background:rgba(29,155,240,0.1)}
+.session-list li.active{background:rgba(29,155,240,0.2);color:var(--accent)}
+.main-panel{flex:1;display:flex;flex-direction:column;min-width:0}
+.main-panel textarea{width:100%;flex:1;min-height:200px;padding:1rem;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:monospace;font-size:0.9rem;resize:vertical}
+.main-panel textarea:focus{outline:none;border-color:var(--accent)}
+.panel-footer{margin-top:0.5rem}
+.char-count{font-size:0.85rem;color:var(--text-muted)}
+.controls-panel{flex-shrink:0;width:180px}
+.radio-group{display:flex;flex-direction:column;gap:0.4rem;margin-bottom:0.75rem}
+.radio-label,.checkbox-label{display:flex;align-items:center;gap:0.5rem;font-size:0.9rem;cursor:pointer}
+.checkbox-label{margin-bottom:1rem}
+.checkbox-label input:disabled{opacity:0.5;cursor:not-allowed}
+.btn-group{display:flex;gap:0.5rem;flex-wrap:wrap}
+.btn-group.vertical{flex-direction:column}
+.btn-group.vertical .btn{width:100%}
+.btn{padding:0.6rem 1rem;border:none;border-radius:8px;font-size:0.9rem;font-family:inherit;cursor:pointer;transition:background 0.15s,transform 0.1s}
+.btn:active{transform:scale(0.98)}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-secondary{background:var(--bg-input);color:var(--text);border:1px solid var(--border)}
+.btn-secondary:hover{background:#2d3d4d}
+.full-width{width:100%;margin-top:0.5rem}
+.key-actions{margin-top:auto;padding-top:0.5rem}
+.footer{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--border);text-align:center;font-size:0.85rem;color:var(--text-muted)}
+.status{margin-bottom:0.5rem}
+.warning{color:var(--text-muted);margin-bottom:0.5rem;font-size:0.8rem}
+.credit{color:#5e50ce;text-decoration:none}
+.credit:hover{text-decoration:underline}
+@media(max-width:768px){.main{flex-direction:column}.sidebar{width:100%}.content-area{flex-direction:column}.controls-panel{width:100%}.btn-group{flex-direction:row}.btn-group.vertical .btn{width:auto}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="header">
+      <h1>TY语加密器 <span class="version">网页版 3.0</span></h1>
+      <p class="subtitle">与桌面版双端互通 · 加密内容可互相加解密</p>
+    </header>
+    <main class="main">
+      <aside class="sidebar">
+        <section class="panel keys-panel">
+          <h2>密钥管理</h2>
+          <div class="session-list-wrap">
+            <label>会话</label>
+            <ul id="sessionList" class="session-list"></ul>
+            <div class="btn-group">
+              <button type="button" id="btnAddSession" class="btn btn-secondary">保存会话</button>
+              <button type="button" id="btnDelSession" class="btn btn-secondary">删除会话</button>
+            </div>
+          </div>
+          <div class="btn-group vertical">
+            <button type="button" id="btnImportSession" class="btn btn-secondary">导入会话</button>
+            <button type="button" id="btnExportSession" class="btn btn-secondary">导出会话</button>
+          </div>
+          <div class="key-actions">
+            <button type="button" id="btnImportPub" class="btn btn-secondary">导入公钥</button>
+            <button type="button" id="btnImportPriv" class="btn btn-secondary">导入私钥</button>
+            <button type="button" id="btnGenKeys" class="btn btn-primary">生成密钥对</button>
+          </div>
+        </section>
+      </aside>
+      <section class="content-area">
+        <div class="panel main-panel">
+          <h2>内容管理</h2>
+          <textarea id="txtMain" placeholder="在此输入明文或 TY 语密文..." rows="12"></textarea>
+          <div class="panel-footer"><span id="charCount" class="char-count">字符数：0</span></div>
+        </div>
+        <div class="panel controls-panel">
+          <h2>操作</h2>
+          <div class="algo-section">
+            <label>算法选择</label>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="algo" value="x25519" checked> 3.0 全新算法</label>
+              <label class="radio-label"><input type="radio" name="algo" value="rsa"> 2.2 旧版算法</label>
+            </div>
+            <label class="checkbox-label"><input type="checkbox" id="chkCompress" disabled> 压缩密文长度</label>
+          </div>
+          <div class="btn-group vertical">
+            <button type="button" id="btnEncrypt" class="btn btn-primary">加密</button>
+            <button type="button" id="btnDecrypt" class="btn btn-primary">解密</button>
+            <button type="button" id="btnCopy" class="btn btn-secondary">复制结果</button>
+            <button type="button" id="btnClear" class="btn btn-secondary">清空</button>
+          </div>
+          <button type="button" id="btnSavePreset" class="btn btn-secondary full-width">保存预设</button>
+        </div>
+      </section>
+    </main>
+    <footer class="footer">
+      <div class="status" id="statusBar">就绪</div>
+      <p class="warning">注意：本版本仅兼容 2.2 版本。本工具严禁用于违法活动，违者后果自行承担！</p>
+      <a href="https://lcs123.top" target="_blank" rel="noopener" class="credit">By LCS 2020-2026</a>
+    </footer>
+  </div>
+  <input type="file" id="fileImport" accept=".tysess" hidden>
+  <input type="file" id="fileImportPub" accept=".xml,.txt" hidden>
+  <input type="file" id="fileImportPriv" accept=".xml,.txt" hidden>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pako/2.1.0/pako.min.js"></script>
+  <script>
+const TyCrypto=(function(){'use strict';
+const wordList=["吴聊","高点","压制","伯父","钉钉","车失","咸入","支援","前线","吻开","一航","悄然","幸福","假如","捉胃","陈兆","变态","行军","全速","动感","红地","儿子","防爬","木南","打的","炒饭","哨兵","远控","天叶","火华","策略","带添","汗城","欧标","基地","警戒","通讯","蟑螂","杨台","刺猬","病毒","顺龙","利萍","润冰","找茬","嘟嘟","洞幺","弹药","侦察","平头","追击","废了","生艹","抄马","恨狗","毛利","嘴贱","军事","迷你","包马","电脑","监听","长官","没屎"];
+const wordList128=["吴聊","高点","压制","伯父","钉钉","车失","咸入","支援","前线","吻开","一航","悄然","幸福","假如","捉胃","陈兆","变态","行军","全速","动感","红地","儿子","防爬","木南","打的","炒饭","哨兵","远控","天晔","火华","策略","带添","汗城","欧标","基地","警戒","通讯","蟑螂","杨台","刺猬","病毒","顺龙","利萍","润冰","找茬","嘟嘟","洞幺","弹药","侦察","平头","追击","废了","生艹","抄码","恨狗","毛利","嘴贱","军事","迷你","包马","电脑","监听","长官","没屎","烂脸","耳东","掩护","屏翻","菊瓶","国羊","加豪","春埂","啵铂","佩歪","土匪","莉园","金释","霉菌","房御","塔喽","懒芸","飞猪","腥郡","劳扩","乒乓","方格","二恺","蜂脚","佰敷","泻鲤","首鸡","扣币","拿枪","玛旧","占术","得可","算海","承诺","迦浮","核霸","炸药","凯鳃","砖叶","害人","俞轩","狐狸","雷特","鹄蛹","西四","请求","君峥","徕睐","瘤歌","裕霍","慨船","武装","兆河","鑫巾","杀死","金喽","唯美","浩文","装甲","护盾","跳伞","彩虹","硫囚","新服"];
+const wordList256=[...wordList128,"自蛋","机枪","刚抢","苟分","舔包","空头","伞酱","夜屎","热橙","香仪","防谈","弹夹","蛋盒","枪棺","抢脱","消因","消烟","制退","后坐","抛客","进蛋","卡蛋","炸糖","哑火","鸭蛋","臭蛋","手雷","手溜","震爆","烟雾","烟幕","催泪","毒气","生化","核蛋","放辐","沾染","洗消","侦插","巡锣","岗少","暗少","明少","潜服","埋扶","设伏","突袭","夜袭","强攻","佯功","迂回","穿叉","包切","围煎","清缴","肃清","俘卤","审迅","口供","情爆","密电","破译","截获","监听","电苔","频段","跳频","加密","解码","呼号","代号","密语","洞铃","洞山","洞死","洞舞","洞溜","洞漆","洞拔","洞酒","拐零","拐一","拐二","拐三","幺洞","两拐","三八","酒瓶","军粮","野餐","水壶","工兵","锹镐","地雷","诡雷","拌线","铁丝","拒马","掩体","战壕","猫耳","火力","压智","覆盖","急促","徐进","弹幕","校射","观瞄","炮兵","榴弹","迫击","火箭","筒子","反坦","飞军","破甲","碎甲","装药","引信","天罡","铁血","利剑","战鹰","雷霆","迅捷","玄武","苍穹"];
+function base64ToArrayBuffer(b64){let s=(b64||'').replace(/-/g,'+').replace(/_/g,'/').replace(/\s/g,'');s=s+'='.repeat((4-s.length%4)%4);const binary=atob(s);const bytes=new Uint8Array(binary.length);for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);return bytes.buffer}
+function arrayBufferToBase64(buf){const bytes=new Uint8Array(buf);let binary='';for(let i=0;i<bytes.length;i++)binary+=String.fromCharCode(bytes[i]);return btoa(binary)}
+function bytesToWordString(data){const sb=[];for(let i=0;i<data.length;i++){const b=data[i];sb.push(wordList[(b/64)|0],wordList[b&63],'！')}if(sb.length>0)sb.pop();return sb.join('')}
+function wordStringToBytes(s){const parts=s.replace(/\s/g,'').split(/[！!]/);const out=[];for(const pair of parts){if(pair.length<4)continue;const hi=wordList.indexOf(pair.substring(0,2));const lo=wordList.indexOf(pair.substring(2,4));if(hi<0||lo<0)throw new Error('请检查输入是否为ty语！');out.push((hi*64+lo)&0xff)}return new Uint8Array(out)}
+function bytesToWordString128(data){const sb=[];for(let i=0;i<data.length;i++)sb.push(wordList256[data[i]&0xff]);return sb.join('')}
+function wordStringToBytes128(s){s=(s||'').replace(/\s/g,'');if(!s||s.length%2!==0)throw new Error('输入长度不正确：词元应为两字一组');const out=[];for(let i=0;i<s.length;i+=2){const idx=wordList256.indexOf(s.substring(i,i+2));if(idx<0||idx>255)throw new Error('请检查输入是否为ty语！');out.push(idx)}return new Uint8Array(out)}
+function compressString(input){const bytes=new TextEncoder().encode(input);if(bytes.length<32)return bytes;try{if(typeof pako!=='undefined'){const c=pako.gzip(bytes);if(c.length<bytes.length)return c}}catch(e){}return bytes}
+function decompressBytes(data){try{if(typeof pako!=='undefined'){try{return new TextDecoder().decode(pako.ungzip(new Uint8Array(data)))}catch(e){}try{return new TextDecoder().decode(pako.inflate(new Uint8Array(data)))}catch(e){}}}catch(e){}return new TextDecoder().decode(data)}
+async function hkdfSha256(salt,ikm,info,outLen){if(!salt)salt=new Uint8Array(32);const extractKey=await crypto.subtle.importKey('raw',salt,{name:'HMAC',hash:'SHA-256'},false,['sign']);const prk=await crypto.subtle.sign('HMAC',extractKey,ikm);const prkKey=await crypto.subtle.importKey('raw',prk,{name:'HMAC',hash:'SHA-256'},false,['sign']);const okm=[];let prev=new ArrayBuffer(0);let counter=1;while(okm.length<outLen){const data=new Uint8Array(prev.byteLength+info.length+1);data.set(new Uint8Array(prev),0);data.set(info,prev.byteLength);data[data.length-1]=counter;const t=await crypto.subtle.sign('HMAC',prkKey,data);prev=t;okm.push(...new Uint8Array(t));counter++}return new Uint8Array(okm.slice(0,outLen))}
+function parseRsaXml(xml){const cleanB64=s=>(s||'').replace(/\s/g,'');const doc=new DOMParser().parseFromString(xml,'text/xml');const getVal=tag=>{const el=doc.getElementsByTagName(tag)[0];return el?(el.textContent||'').trim():null};const modulus=getVal('Modulus'),exponent=getVal('Exponent');if(!modulus||!exponent)throw new Error('无效的 RSA 公钥 XML');const n=base64ToArrayBuffer(cleanB64(modulus)),e=base64ToArrayBuffer(cleanB64(exponent));const b64url=buf=>btoa(String.fromCharCode.apply(null,new Uint8Array(buf))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');const jwk={kty:'RSA',n:b64url(n),e:b64url(e)};const p=getVal('P'),q=getVal('Q'),d=getVal('D');if(p&&q&&d){jwk.d=b64url(base64ToArrayBuffer(cleanB64(d)));jwk.p=b64url(base64ToArrayBuffer(cleanB64(p)));jwk.q=b64url(base64ToArrayBuffer(cleanB64(q)));['dp','dq','qi'].forEach((k,i)=>{const v=getVal(['DP','DQ','InverseQ'][i]);if(v)jwk[k]=b64url(base64ToArrayBuffer(cleanB64(v)))})}return jwk}
+async function importRsaPublicKey(xml){return crypto.subtle.importKey('jwk',parseRsaXml(xml),{name:'RSA-OAEP',hash:'SHA-256'},true,['encrypt'])}
+async function importRsaPrivateKey(xml){return crypto.subtle.importKey('jwk',parseRsaXml(xml),{name:'RSA-OAEP',hash:'SHA-256'},true,['decrypt'])}
+async function hybridEncryptRsa(plain,rsaPublicKey){const aesKey=crypto.getRandomValues(new Uint8Array(16)),hmacKey=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(16));const aesKeyObj=await crypto.subtle.importKey('raw',aesKey,{name:'AES-CBC'},false,['encrypt']);const cipher=await crypto.subtle.encrypt({name:'AES-CBC',iv},aesKeyObj,plain);const session=new Uint8Array(32);session.set(aesKey,0);session.set(hmacKey,16);let rsaEnc;try{rsaEnc=await crypto.subtle.encrypt({name:'RSA-OAEP'},rsaPublicKey,session)}catch(e){const jwk=await crypto.subtle.exportKey('jwk',rsaPublicKey);const key=await crypto.subtle.importKey('jwk',jwk,{name:'RSA-OAEP',hash:'SHA-1'},true,['encrypt']);rsaEnc=await crypto.subtle.encrypt({name:'RSA-OAEP',hash:'SHA-1'},key,session)}const rsaLenBE=new Uint8Array(2);rsaLenBE[0]=(rsaEnc.byteLength>>8)&0xff;rsaLenBE[1]=rsaEnc.byteLength&0xff;const aad=new Uint8Array(1+1+16+2+rsaEnc.byteLength+cipher.byteLength);let off=0;aad[off++]=3;aad[off++]=1;aad.set(iv,off);off+=16;aad.set(rsaLenBE,off);off+=2;aad.set(new Uint8Array(rsaEnc),off);off+=rsaEnc.byteLength;aad.set(new Uint8Array(cipher),off);const hmacKeyObj=await crypto.subtle.importKey('raw',hmacKey,{name:'HMAC',hash:'SHA-256'},false,['sign']);const tag=new Uint8Array((await crypto.subtle.sign('HMAC',hmacKeyObj,aad))).slice(0,16);const packet=new Uint8Array(1+1+16+2+rsaEnc.byteLength+cipher.byteLength+16);off=0;packet[off++]=3;packet[off++]=1;packet.set(iv,off);off+=16;packet.set(rsaLenBE,off);off+=2;packet.set(new Uint8Array(rsaEnc),off);off+=rsaEnc.byteLength;packet.set(new Uint8Array(cipher),off);off+=cipher.byteLength;packet.set(tag,off);return packet}
+function toStandardBase64(b64url){if(!b64url)return'';const s=b64url.replace(/-/g,'+').replace(/_/g,'/');return s+'='.repeat((4-s.length%4)%4)}
+async function getRsaXmlFromKey(key){const jwk=await crypto.subtle.exportKey('jwk',key);let xml='<RSAKeyValue><Modulus>'+toStandardBase64(jwk.n)+'</Modulus><Exponent>'+toStandardBase64(jwk.e)+'</Exponent>';if(jwk.d){xml+='<P>'+toStandardBase64(jwk.p)+'</P><Q>'+toStandardBase64(jwk.q)+'</Q><DP>'+toStandardBase64(jwk.dp)+'</DP><DQ>'+toStandardBase64(jwk.dq)+'</DQ><InverseQ>'+toStandardBase64(jwk.qi)+'</InverseQ><D>'+toStandardBase64(jwk.d)+'</D>'}return xml+'</RSAKeyValue>'}
+async function hybridEncryptX25519(plain,publicKeyB64){const recipientPub=base64ToArrayBuffer(publicKeyB64);const ephKeyPair=await crypto.subtle.generateKey({name:'X25519'},true,['deriveBits']);const recipientKey=await crypto.subtle.importKey('spki',recipientPub,{name:'X25519'},false,[]);const sharedSecret=await crypto.subtle.deriveBits({name:'X25519',public:recipientKey},ephKeyPair.privateKey,256);const info=new TextEncoder().encode('tylang-x25519-aesgcm-v1');const keyMat=await hkdfSha256(null,sharedSecret,info,44);const aesKey=keyMat.slice(0,32),nonce=keyMat.slice(32,44);const aesKeyObj=await crypto.subtle.importKey('raw',aesKey,{name:'AES-GCM',length:256},false,['encrypt']);const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,tagLength:128},aesKeyObj,plain);const ephRaw=new Uint8Array(await crypto.subtle.exportKey('raw',ephKeyPair.publicKey)).slice(-32);const cipherBytes=new Uint8Array(cipher);const cipherBody=cipherBytes.slice(0,-16),tag=cipherBytes.slice(-16);const packet=new Uint8Array(1+1+32+12+cipherBody.length+16);let off=0;packet[off++]=4;packet[off++]=2;packet.set(ephRaw,off);off+=32;packet.set(nonce,off);off+=12;packet.set(cipherBody,off);off+=cipherBody.length;packet.set(tag,off);return packet}
+async function hybridDecryptRsa(packet,rsaPrivateKey){const iv=packet.slice(2,18),rsaLen=(packet[18]<<8)|packet[19],rsaEnc=packet.slice(20,20+rsaLen),cipherLen=packet.length-20-rsaLen-16,cipher=packet.slice(20+rsaLen,20+rsaLen+cipherLen),tag=packet.slice(20+rsaLen+cipherLen);const rsaLenBE=new Uint8Array(2);rsaLenBE[0]=(rsaEnc.length>>8)&0xff;rsaLenBE[1]=rsaEnc.length&0xff;const aad=new Uint8Array(1+1+16+2+rsaEnc.length+cipher.length);let off=0;aad[off++]=3;aad[off++]=1;aad.set(iv,off);off+=16;aad.set(rsaLenBE,off);off+=2;aad.set(rsaEnc,off);off+=rsaEnc.length;aad.set(cipher,off);let session;for(const hash of['SHA-256','SHA-1']){try{session=await crypto.subtle.decrypt({name:'RSA-OAEP',hash},rsaPrivateKey,rsaEnc);break}catch(e){if(hash==='SHA-1')throw new Error('解密失败，请检查私钥是否正确')}}const sessionArr=new Uint8Array(session),aesKey=sessionArr.slice(0,16),hmacKey=sessionArr.slice(16,32);const hmacKeyObj=await crypto.subtle.importKey('raw',hmacKey,{name:'HMAC',hash:'SHA-256'},false,['sign']);const calcTag16=new Uint8Array(await crypto.subtle.sign('HMAC',hmacKeyObj,aad)).slice(0,16);for(let i=0;i<16;i++)if(calcTag16[i]!==tag[i])throw new Error('完整性校验失败');const aesKeyObj=await crypto.subtle.importKey('raw',aesKey,{name:'AES-CBC'},false,['decrypt']);return crypto.subtle.decrypt({name:'AES-CBC',iv},aesKeyObj,cipher)}
+async function hybridDecryptX25519(packet,privateKeyB64){const ephRaw=packet.slice(2,34),nonce=packet.slice(34,46),cipherBody=packet.slice(46,packet.length-16),tag=packet.slice(packet.length-16);const privKey=await crypto.subtle.importKey('pkcs8',base64ToArrayBuffer(privateKeyB64),{name:'X25519'},false,['deriveBits']);const spkiHeader=new Uint8Array([0x30,0x2a,0x30,0x05,0x06,0x03,0x2b,0x65,0x6e,0x03,0x21,0x00]);const ephSpki=new Uint8Array(spkiHeader.length+ephRaw.length);ephSpki.set(spkiHeader,0);ephSpki.set(ephRaw,spkiHeader.length);const ephPubKey=await crypto.subtle.importKey('spki',ephSpki.buffer,{name:'X25519'},false,[]);const sharedSecret=await crypto.subtle.deriveBits({name:'X25519',public:ephPubKey},privKey,256);const info=new TextEncoder().encode('tylang-x25519-aesgcm-v1');const keyMat=await hkdfSha256(null,sharedSecret,info,44);const aesKey=keyMat.slice(0,32),nonceArr=keyMat.slice(32,44);const cipher=new Uint8Array(cipherBody.length+tag.length);cipher.set(cipherBody,0);cipher.set(tag,cipherBody.length);const aesKeyObj=await crypto.subtle.importKey('raw',aesKey,{name:'AES-GCM',length:256},false,['decrypt']);return crypto.subtle.decrypt({name:'AES-GCM',iv:nonceArr,tagLength:128},aesKeyObj,cipher)}
+async function hybridEncrypt(plain,publicKeyStr){const plainArr=plain instanceof Uint8Array?plain:new Uint8Array(plain);return publicKeyStr.startsWith('X25519:')?hybridEncryptX25519(plainArr,publicKeyStr.slice(7)):hybridEncryptRsa(plainArr,await importRsaPublicKey(publicKeyStr))}
+async function hybridDecrypt(packet,privateKeyStr){const v=packet[0],a=packet[1];if(v===4&&a===2){if(!privateKeyStr.startsWith('X25519:'))throw new Error('私钥格式错误：期待 X25519 私钥');return hybridDecryptX25519(packet,privateKeyStr.slice(7))}if(v===3&&a===1)return hybridDecryptRsa(packet,await importRsaPrivateKey(privateKeyStr));throw new Error('格式不支持')}
+async function generateRsaKeyPair(){const pair=await crypto.subtle.generateKey({name:'RSA-OAEP',modulusLength:2048,publicExponent:new Uint8Array([1,0,1])},true,['encrypt','decrypt']);const pubJwk=await crypto.subtle.exportKey('jwk',pair.publicKey),privJwk=await crypto.subtle.exportKey('jwk',pair.privateKey);const toXml=jwk=>{let x='<RSAKeyValue><Modulus>'+toStandardBase64(jwk.n)+'</Modulus><Exponent>'+toStandardBase64(jwk.e)+'</Exponent>';if(jwk.d)x+='<P>'+toStandardBase64(jwk.p)+'</P><Q>'+toStandardBase64(jwk.q)+'</Q><DP>'+toStandardBase64(jwk.dp)+'</DP><DQ>'+toStandardBase64(jwk.dq)+'</DQ><InverseQ>'+toStandardBase64(jwk.qi)+'</InverseQ><D>'+toStandardBase64(jwk.d)+'</D>';return x+'</RSAKeyValue>'};return{publicXml:toXml(pubJwk),privateXml:toXml(privJwk)}}
+async function generateX25519KeyPair(){const pair=await crypto.subtle.generateKey({name:'X25519'},true,['deriveBits']);return{publicBase64:'X25519:'+arrayBufferToBase64(await crypto.subtle.exportKey('spki',pair.publicKey)),privateBase64:'X25519:'+arrayBufferToBase64(await crypto.subtle.exportKey('pkcs8',pair.privateKey))}}
+return{async encryptToWords(plainText,compress,publicKeyStr){const data=compress?compressString(plainText):new TextEncoder().encode(plainText);const packet=await hybridEncrypt(data,publicKeyStr);const arr=new Uint8Array(packet);return publicKeyStr.startsWith('X25519:')?compress?bytesToWordString128(arr):bytesToWordString(arr):bytesToWordString(arr)},async decryptFromWords(wordCipher,compressed,privateKeyStr){const isX19=privateKeyStr.startsWith('X25519:');const tryD=async decodeFn=>{const pkt=decodeFn(wordCipher);const data=await hybridDecrypt(pkt,privateKeyStr);return compressed?decompressBytes(data):new TextDecoder().decode(data)};if(isX19){try{return await tryD(compressed?wordStringToBytes128:wordStringToBytes)}catch(e1){try{return await tryD(compressed?wordStringToBytes:wordStringToBytes128)}catch(e2){throw e1}}}const pkt=wordStringToBytes(wordCipher);const data=await hybridDecrypt(pkt,privateKeyStr);return compressed?decompressBytes(data):new TextDecoder().decode(data)},generateRsaKeyPair,generateX25519KeyPair}})();
+  </script>
+  <script>
+(function(){'use strict';
+const STORAGE_KEY='tylang_sessions',PRESET_KEY='tylang_preset';
+let sessions=[],publicKeyXml='',privateKeyXml='';
+const $=id=>document.getElementById(id),txtMain=$('txtMain'),sessionList=$('sessionList'),charCount=$('charCount'),statusBar=$('statusBar'),chkCompress=$('chkCompress'),fileImport=$('fileImport'),fileImportPub=$('fileImportPub'),fileImportPriv=$('fileImportPriv');
+function setStatus(m){statusBar.textContent=m}
+function updateCharCount(){charCount.textContent='字符数：'+txtMain.value.length}
+function getAlgo(){return document.querySelector('input[name="algo"]:checked').value}
+function isX25519(){return getAlgo()==='x25519'}
+function getCompress(){return chkCompress.checked}
+function renderSessions(){sessionList.innerHTML='';sessions.forEach((s,i)=>{const li=document.createElement('li');li.textContent=s.name;li.dataset.index=i;li.onclick=()=>selectSession(i);sessionList.appendChild(li)});if(sessions.length&&!sessionList.querySelector('.active'))selectSession(0)}
+function selectSession(i){sessionList.querySelectorAll('li').forEach((el,j)=>el.classList.toggle('active',j===i));if(i>=0&&i<sessions.length){const s=sessions[i];publicKeyXml=s.publicXml;privateKeyXml=s.privateXml;document.querySelector('input[name="algo"][value="'+(s.algorithmType===1?'x25519':'rsa')+'"]').checked=true;chkCompress.checked=s.doUseCompress;setStatus('已切换到会话: '+s.name)}}
+function saveSessions(){try{localStorage.setItem(STORAGE_KEY,JSON.stringify(sessions.map(s=>({name:s.name,publicXml:s.publicXml,privateXml:s.privateXml,algorithmType:s.algorithmType,doUseCompress:s.doUseCompress}))))}catch(e){}}
+function loadSessions(){try{const r=localStorage.getItem(STORAGE_KEY);if(r){sessions=JSON.parse(r);renderSessions()}}catch(e){}}
+function sanitizeFileName(n){if(!n||!n.trim())return'session';return n.trim().replace(/[<>:"/\\|?*]/g,'_').substring(0,100)||'session'}
+async function btnGenKeys(){try{setStatus('正在生成密钥对...');let pub,priv;if(isX25519()){const kp=await TyCrypto.generateX25519KeyPair();pub=kp.publicBase64;priv=kp.privateBase64}else{const kp=await TyCrypto.generateRsaKeyPair();pub=kp.publicXml;priv=kp.privateXml}publicKeyXml=pub;privateKeyXml=priv;sessionList.querySelectorAll('li').forEach(el=>el.classList.remove('active'));setStatus('密钥对已生成。可点击「保存会话」将此密钥保存到会话列表。')}catch(e){setStatus('生成失败');alert('生成密钥失败：'+e.message)}}
+function btnAddSession(){const name=prompt('请输入会话名称','新会话');if(!name||!name.trim())return;if(!publicKeyXml||!privateKeyXml){alert('当前没有可保存的密钥，请先生成或导入公私钥。');return}sessions.push({name:name.trim(),publicXml:publicKeyXml,privateXml:privateKeyXml,algorithmType:isX25519()?1:0,doUseCompress:getCompress()});saveSessions();renderSessions();selectSession(sessions.length-1);setStatus('会话 '+name+' 已保存并激活。')}
+function btnDelSession(){const a=sessionList.querySelector('li.active');if(!a){alert('请先选择一个会话。');return}const i=parseInt(a.dataset.index,10),n=sessions[i].name;sessions.splice(i,1);saveSessions();renderSessions();sessions.length?selectSession(Math.min(i,sessions.length-1)):(publicKeyXml='',privateKeyXml='');setStatus('会话 '+n+' 已删除。')}
+async function btnEncrypt(){if(!publicKeyXml){alert('要加密，请先导入或生成公钥');return}const keyIsX19=publicKeyXml.startsWith('X25519:');if(isX25519()!==keyIsX19){alert('所选算法与当前密钥类型不匹配！当前是'+(keyIsX19?'X25519 新算法':'RSA 旧算法')+'密钥。请切换算法选项或重新生成/导入对应类型的密钥。');return}const t=txtMain.value.trim();if(!t){setStatus('请输入要加密的内容');return}try{setStatus('加密中...');const r=await TyCrypto.encryptToWords(t,isX25519()||getCompress(),publicKeyXml);txtMain.value=r;updateCharCount();setStatus('加密完成')}catch(e){setStatus('加密失败');alert('加密失败：'+e.message)}}
+async function btnDecrypt(){if(!privateKeyXml){alert('要解密，请先导入或生成私钥');return}const keyIsX19=privateKeyXml.startsWith('X25519:');if(isX25519()!==keyIsX19){alert('所选算法与当前密钥类型不匹配！当前是'+(keyIsX19?'X25519 新算法':'RSA 旧算法')+'密钥。请切换算法选项或重新导入对应类型的密钥。');return}const t=txtMain.value.trim();if(!t){setStatus('请输入要解密的 TY 语');return}try{setStatus('解密中...');const r=await TyCrypto.decryptFromWords(t,isX25519()||getCompress(),privateKeyXml);txtMain.value=r;updateCharCount();setStatus('解密完成')}catch(e){setStatus('解密失败');alert('解密失败：'+e.message+'\n\n请确保：1)密文完整无删改 2)使用加密时的同一把私钥 3)若从别处复制，检查是否有不可见字符')}}
+function btnCopy(){txtMain.select();document.execCommand('copy');setStatus('已复制。')}
+function btnClear(){txtMain.value='';updateCharCount();setStatus('已清空。')}
+function btnSavePreset(){try{localStorage.setItem(PRESET_KEY,JSON.stringify({algo:getAlgo(),compress:getCompress()}));setStatus('预设已保存')}catch(e){setStatus('保存预设失败')}}
+function loadPreset(){if(sessions.length>0)return;try{const r=localStorage.getItem(PRESET_KEY);if(r){const p=JSON.parse(r);const rb=document.querySelector('input[name="algo"][value="'+p.algo+'"]');if(rb)rb.checked=true;chkCompress.checked=!!p.compress}}catch(e){}}
+async function decryptTysessPassword(enc,pwd){const itb=new DataView(enc.buffer,enc.byteOffset+7,4);const iterations=itb.getUint32(0,false),salt=enc.slice(11,27),nonce=enc.slice(27,39),tag=enc.slice(enc.length-16),cipher=enc.slice(39,enc.length-16);const pwKey=await deriveKey(pwd,salt,iterations);const key=await crypto.subtle.importKey('raw',pwKey,{name:'AES-GCM'},false,['decrypt']);const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:nonce,tagLength:128},key,new Uint8Array([...cipher,...tag]).buffer);return new TextDecoder('utf-8').decode(plain)}
+async function deriveKey(pwd,salt,iterations){const enc=new TextEncoder(),pw=enc.encode(pwd);const key=await crypto.subtle.importKey('raw',pw,'PBKDF2',false,['deriveBits']);return await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations,hash:'SHA-256'},key,256)}
+async function encryptTysessPassword(plain,pwd){const salt=crypto.getRandomValues(new Uint8Array(16)),nonce=crypto.getRandomValues(new Uint8Array(12)),iterations=100000;const pwKey=await deriveKey(pwd,salt,iterations);const key=await crypto.subtle.importKey('raw',pwKey,{name:'AES-GCM'},false,['encrypt']);const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv:nonce,tagLength:128},key,plain);const out=new Uint8Array(7+4+16+12+cipher.byteLength);out.set(new TextEncoder().encode('TYSESS1'),0);new DataView(out.buffer).setUint32(7,iterations,false);out.set(salt,11);out.set(nonce,27);out.set(new Uint8Array(cipher),39);return out}
+fileImport.onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.value='';try{const bytes=await f.arrayBuffer(),arr=new Uint8Array(bytes);let content=null;if(arr.length>=7&&String.fromCharCode.apply(null,arr.slice(0,7))==='TYSESS1'){const pwd=prompt('请输入用于加密会话文件的密码：','');if(pwd==null){setStatus('导入已取消。');return}try{content=await decryptTysessPassword(arr,pwd)}catch(err){alert('解密会话文件失败，请检查密码');return}}if(!content)content=new TextDecoder('utf-8').decode(bytes);const lines=content.split(/\r?\n/);if(lines.length<5)throw new Error('文件格式错误');const h=lines[0].split('|');if(h.length<3)throw new Error('文件格式错误');const ext=(sm,em)=>{const si=lines.indexOf(sm);if(si<0)throw new Error('文件格式错误');const ei=em?lines.indexOf(em,si+1):lines.length;if(em&&ei<0)throw new Error('文件格式错误');return lines.slice(si+1,em?ei:lines.length).join('\n')};sessions.push({name:h[0],algorithmType:parseInt(h[1],10)||0,doUseCompress:h[2]==='1',publicXml:ext('----PUB----','----PRIV----'),privateXml:ext('----PRIV----',null)});saveSessions();renderSessions();selectSession(sessions.length-1);setStatus('会话已导入。')}catch(err){alert('导入失败：'+err.message)}}
+fileImportPub.onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.value='';try{publicKeyXml=(await f.text()).trim();sessionList.querySelectorAll('li').forEach(el=>el.classList.remove('active'));setStatus('公钥已导入')}catch(err){alert('读取文件失败：'+err.message)}}
+fileImportPriv.onchange=async e=>{const f=e.target.files[0];if(!f)return;e.target.value='';try{privateKeyXml=(await f.text()).trim();sessionList.querySelectorAll('li').forEach(el=>el.classList.remove('active'));setStatus('私钥已导入')}catch(err){alert('读取文件失败：'+err.message)}}
+$('btnGenKeys').onclick=btnGenKeys;$('btnAddSession').onclick=btnAddSession;$('btnDelSession').onclick=btnDelSession;$('btnEncrypt').onclick=btnEncrypt;$('btnDecrypt').onclick=btnDecrypt;$('btnCopy').onclick=btnCopy;$('btnClear').onclick=btnClear;$('btnSavePreset').onclick=btnSavePreset;$('btnImportSession').onclick=()=>fileImport.click();$('btnExportSession').onclick=()=>{const a=sessionList.querySelector('li.active');if(!a){alert('请先选择要导出的会话。');return}const si=sessions[parseInt(a.dataset.index,10)],body=si.name+'|'+si.algorithmType+'|'+(si.doUseCompress?1:0)+'\n----PUB----\n'+si.publicXml+'\n----PRIV----\n'+si.privateXml;const pwd=prompt('请输入密码以加密导出的会话文件（留空则不加密）：','');if(pwd==null){setStatus('导出已取消。');return}if(!pwd){const blob=new Blob([body],{type:'text/plain;charset=utf-8'});const lnk=document.createElement('a');lnk.href=URL.createObjectURL(blob);lnk.download=sanitizeFileName(si.name)+'.tysess';lnk.click();URL.revokeObjectURL(lnk.href);setStatus('会话已导出（未加密）。');return}(async()=>{try{const enc=await encryptTysessPassword(new TextEncoder().encode(body),pwd);const blob=new Blob([enc]);const lnk=document.createElement('a');lnk.href=URL.createObjectURL(blob);lnk.download=sanitizeFileName(si.name)+'.tysess';lnk.click();URL.revokeObjectURL(lnk.href);setStatus('会话已导出并已用密码加密。')}catch(e){alert('加密导出失败：'+e.message)}})()};$('btnImportPub').onclick=()=>fileImportPub.click();$('btnImportPriv').onclick=()=>fileImportPriv.click();
+txtMain.oninput=updateCharCount;document.querySelectorAll('input[name="algo"]').forEach(rb=>rb.onchange=()=>{chkCompress.disabled=isX25519();if(isX25519())chkCompress.checked=false});
+loadSessions();loadPreset();chkCompress.disabled=isX25519();updateCharCount();setStatus('就绪');
+})();
+  </script>
+</body>
+</html>
