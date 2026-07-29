@@ -139,7 +139,7 @@ Partial Class Form1
         RadioButton2.AutoSize = True
         RadioButton2.Location = New Point(5, 228)
         RadioButton2.Name = "RadioButton2"
-        RadioButton2.Size = New Size(91, 21)
+        RadioButton2.Size = New Size(95, 21)
         RadioButton2.TabIndex = 7
         RadioButton2.Text = "2.2 旧版算法"
         RadioButton2.UseVisualStyleBackColor = True
@@ -159,7 +159,7 @@ Partial Class Form1
         RadioButton1.Checked = True
         RadioButton1.Location = New Point(6, 203)
         RadioButton1.Name = "RadioButton1"
-        RadioButton1.Size = New Size(91, 21)
+        RadioButton1.Size = New Size(95, 21)
         RadioButton1.TabIndex = 5
         RadioButton1.TabStop = True
         RadioButton1.Text = "3.0 全新算法"
@@ -266,7 +266,7 @@ Partial Class Form1
         lblWarn.ForeColor = Color.Red
         lblWarn.Location = New Point(432, 363)
         lblWarn.Name = "lblWarn"
-        lblWarn.Size = New Size(421, 17)
+        lblWarn.Size = New Size(429, 17)
         lblWarn.TabIndex = 4
         lblWarn.Text = "注意：本版本仅兼容 2.2 版本。本工具严禁用于违法活动，违者后果自行承担！"
         ' 
@@ -300,7 +300,7 @@ Partial Class Form1
         ' 
         ' Form1
         ' 
-        AutoScaleDimensions = New SizeF(96.0F, 96.0F)
+        AutoScaleDimensions = New SizeF(96F, 96F)
         AutoScaleMode = AutoScaleMode.Dpi
         ClientSize = New Size(864, 411)
         Controls.Add(LinkLabel1)
@@ -309,13 +309,13 @@ Partial Class Form1
         Controls.Add(grpKeys)
         Controls.Add(grpControls)
         Controls.Add(grpMain)
-        Font = New Font("Microsoft YaHei UI", 9.0F)
+        Font = New Font("Microsoft YaHei UI", 9F)
         ForeColor = SystemColors.ControlText
         FormBorderStyle = FormBorderStyle.FixedSingle
         Icon = CType(resources.GetObject("$this.Icon"), Icon)
         MaximizeBox = False
         Name = "Form1"
-        Text = "TY语加密器 3.0"
+        Text = "TY语加密器 3.1"
         grpMain.ResumeLayout(False)
         grpMain.PerformLayout()
         grpControls.ResumeLayout(False)
