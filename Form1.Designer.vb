@@ -43,6 +43,7 @@ Partial Class Form1
         ' 
         txtMain.Anchor = AnchorStyles.Top Or AnchorStyles.Bottom Or AnchorStyles.Left Or AnchorStyles.Right
         txtMain.Location = New Point(25, 31)
+        txtMain.MaxLength = Integer.MaxValue
         txtMain.Multiline = True
         txtMain.Name = "txtMain"
         txtMain.ScrollBars = ScrollBars.Vertical
